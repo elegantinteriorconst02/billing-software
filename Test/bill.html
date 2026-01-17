@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Bill</title>
+</head>
+<body>
+
+<h2>Create Bill</h2>
+
+<!-- Client -->
+<label>Client:</label>
+<select id="clientSelect">
+  <option value="">Select Client</option>
+</select>
+
+<hr>
+
+<!-- Item Entry -->
+<select id="itemSelect">
+  <option value="">Select Item</option>
+</select>
+
+<input id="rate" type="number" placeholder="Rate" readonly>
+<input id="gst" type="number" placeholder="GST %" readonly>
+<input id="qty" type="number" placeholder="Qty">
+
+<button id="addItem">Add Item</button>
+
+<hr>
+
+<!-- Bill Table -->
+<table border="1" cellpadding="6">
+  <thead>
+    <tr>
+      <th>Item</th>
+      <th>Qty</th>
+      <th>Rate</th>
+      <th>GST %</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody id="billBody"></tbody>
+</table>
+
+<hr>
+
+<p>Subtotal: ₹ <span id="subTotal">0</span></p>
+<p>GST: ₹ <span id="gstTotal">0</span></p>
+<h3>Grand Total: ₹ <span id="grandTotal">0</span></h3>
+
+<button id="saveBill">Save Bill</button>
+<p id="msg"></p>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    getDocs,
+    addDoc
+  } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAJliCUJkElsPwbJUGrTUmB7EPyiGaCniQ",
+    authDomain: "eic-billing-software-55635.firebaseapp.com",
+    projectId: "eic-billing-software-55635",
+    storageBucket: "eic-billing-software-55635.firebasestorage.app",
+    messagingSenderId: "376103136888",
+    appId: "1:376103136888:web:ae1ab4d7195037a529478d"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const clientSelect = document.getElementById("clientSelect");
+  const itemSelect = document.getElementById("itemSelect");
+  const rateEl = document.getElementById("rate");
+  const gstEl = document.getElementById("gst");
+  const qtyEl = document.getElementById("qty");
+
+  const billBody = document.getElementById("billBody");
+  const subTotalEl = document.getElementById("subTotal");
+  const gstTotalEl = document.getElementById("gstTotal");
+  const grandTotalEl = document.getElementById("grandTotal");
+  const msgEl = document.getElementById("msg");
+
+  let items = {};
+  let billItems = [];
+
+  /* ---------- LOAD CLIENTS ---------- */
+  const loadClients = async () => {
+    const snap = await getDocs(collection(db, "clients"));
+    snap.forEach(d => {
+      const c = d.data();
+      if (!c.name) return;
+      clientSelect.innerHTML +=
+        `<option value="${d.id}">${c.name}</option>`;
+    });
+  };
+
+  /* ---------- LOAD ITEMS ---------- */
+  const loadItems = async () => {
+    const snap = await getDocs(collection(db, "items"));
+    snap.forEach(d => {
+      const it = d.data();
+      if (it.active === false) return;
+
+      items[d.id] = it;
+      itemSelect.innerHTML +=
+        `<option value="${d.id}">${it.name}</option>`;
+    });
+  };
+
+  /* ---------- AUTO FILL RATE + GST ---------- */
+  itemSelect.addEventListener("change", () => {
+    const it = items[itemSelect.value];
+    if (!it) return;
+
+    rateEl.value = it.rate;
+    gstEl.value = it.gst;
+  });
+
+  /* ---------- ADD ITEM ---------- */
+  document.getElementById("addItem").onclick = () => {
+    const itemId = itemSelect.value;
+    const qty = Number(qtyEl.value);
+
+    if (!itemId || qty <= 0) return;
+
+    const it = items[itemId];
+    const base = it.rate * qty;
+    const gstAmount = (base * it.gst) / 100;
+    const total = base + gstAmount;
+
+    billItems.push({
+      itemId,
+      name: it.name,
+      qty,
+      rate: it.rate,
+      gst: it.gst,
+      total
+    });
+
+    billBody.innerHTML += `
+      <tr>
+        <td>${it.name}</td>
+        <td>${qty}</td>
+        <td>${it.rate}</td>
+        <td>${it.gst}%</td>
+        <td>${total.toFixed(2)}</td>
+      </tr>
+    `;
+
+    qtyEl.value = "";
+    calculateTotals();
+  };
+
+  /* ---------- CALCULATION ---------- */
+  const calculateTotals = () => {
+    let sub = 0;
+    let gst = 0;
+
+    billItems.forEach(i => {
+      sub += i.rate * i.qty;
+      gst += (i.rate * i.qty * i.gst) / 100;
+    });
+
+    subTotalEl.innerText = sub.toFixed(2);
+    gstTotalEl.innerText = gst.toFixed(2);
+    grandTotalEl.innerText = (sub + gst).toFixed(2);
+  };
+
+  /* ---------- SAVE BILL ---------- */
+  document.getElementById("saveBill").onclick = async () => {
+    if (!clientSelect.value || billItems.length === 0) {
+      msgEl.innerText = "❌ Client and items required";
+      return;
+    }
+
+    await addDoc(collection(db, "bills"), {
+      clientId: clientSelect.value,
+      items: billItems,
+      subTotal: Number(subTotalEl.innerText),
+      gst: Number(gstTotalEl.innerText),
+      grandTotal: Number(grandTotalEl.innerText),
+      createdAt: new Date()
+    });
+
+    msgEl.innerText = "✅ Bill saved successfully";
+    billBody.innerHTML = "";
+    billItems = [];
+    calculateTotals();
+  };
+
+  /* ---------- INIT ---------- */
+  await loadClients();
+  await loadItems();
+</script>
+
+</body>
+</html>

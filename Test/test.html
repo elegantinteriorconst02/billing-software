@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice Engine Test</title>
+</head>
+<body>
+
+<h2>Invoice Engine Test</h2>
+<pre id="output">Loading...</pre>
+
+<script type="module">
+  import {
+    createInvoice,
+    addItem
+  } from "./invoice-engine.js";
+
+  try {
+    const invoice = createInvoice("invoice");
+
+    invoice.meta.taxType = "intra"; // intra / inter
+
+    addItem(invoice, {
+      description: "Interior Work",
+      qty: 10,
+      rate: 500,
+      discountPct: 10,
+      gstPct: 18
+    });
+
+    document.getElementById("output").innerText =
+      JSON.stringify(invoice, null, 2);
+
+    console.log("Invoice Engine OK", invoice);
+
+  } catch (err) {
+    document.getElementById("output").innerText =
+      "ERROR:\n" + err.message;
+    console.error(err);
+  }
+</script>
+
+</body>
+</html>

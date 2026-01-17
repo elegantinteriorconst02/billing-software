@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>GST Tax Invoice</title>
+
+<style>
+body{font-family:Arial;font-size:13px}
+input,textarea,select{padding:3px;font-size:13px;width:100%}
+textarea{height:45px}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+th,td{border:1px solid #000;padding:4px}
+th{background:#f2f2f2;text-align:center}
+.center{text-align:center}
+.right{text-align:right}
+.small{width:70px}
+.logo{width:80px;height:80px;border:1px solid #000;text-align:center;line-height:80px}
+</style>
+</head>
+
+<body>
+
+<!-- COMPANY HEADER -->
+<table>
+<tr>
+<td width="15%" class="center">
+<div class="logo">LOGO</div>
+</td>
+<td width="85%">
+<b style="font-size:18px">YOUR COMPANY NAME</b><br>
+Company Address Line 1, City, State – Pincode<br>
+Phone: 9XXXXXXXXX &nbsp; Email: your@email.com<br>
+GSTIN: 19XXXXXXXXXXX &nbsp; PAN: XXXXX1234X
+</td>
+</tr>
+</table>
+
+<h3 align="center">TAX INVOICE</h3>
+
+<!-- BILL / SHIP -->
+<table>
+<tr>
+<td width="50%">
+<b>Bill To</b><br>
+<input id="bname" placeholder="Party Name"><br>
+<textarea id="baddr" placeholder="Address"></textarea>
+State <input id="bstate" class="small">
+Pincode <input id="bpin" class="small">
+GSTIN <input>
+</td>
+
+<td width="50%">
+<b>Ship To</b>
+<label><input type="checkbox" id="same"> Same as Bill</label><br>
+<input id="sname" placeholder="Ship Name"><br>
+<textarea id="saddr" placeholder="Ship Address"></textarea>
+State <input id="sstate" class="small">
+Pincode <input id="spin" class="small"><br>
+Invoice No <input id="ino">
+Invoice Date <input type="date"><br>
+E-Way Bill No <input>
+</td>
+</tr>
+</table>
+
+<!-- ITEM TABLE -->
+<table>
+<thead>
+<tr>
+<th>Sl</th>
+<th>Description</th>
+<th>HSN/SAC</th>
+<th>UOM</th>
+<th>Qty</th>
+<th>Rate</th>
+<th>Disc%</th>
+<th>Taxable</th>
+<th>CGST</th>
+<th>SGST</th>
+<th>IGST</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+
+<button onclick="addRow()">➕ Add Row</button>
+
+<!-- TOTALS -->
+<table>
+<tr><td class="right">Total Taxable Value</td><td id="ttax">0</td></tr>
+<tr><td class="right">CGST Total</td><td id="tcgst">0</td></tr>
+<tr><td class="right">SGST Total</td><td id="tsgst">0</td></tr>
+<tr><td class="right">IGST Total</td><td id="tigst">0</td></tr>
+<tr><td class="right">Total Tax</td><td id="ttaxamt">0</td></tr>
+<tr>
+<td class="right">Round Off</td>
+<td><input id="round" value="0" oninput="calc()"></td>
+</tr>
+<tr>
+<td class="right"><b>Invoice Value</b></td>
+<td><b id="grand">0</b></td>
+</tr>
+</table>
+
+<!-- BANK -->
+<table>
+<tr>
+<td width="50%">
+<b>Bank Details</b><br>
+Bank <input><br>
+A/C No <input><br>
+IFSC <input>
+</td>
+<td align="center">
+<br>For <b>YOUR COMPANY NAME</b><br><br>
+<b>Authorised Signatory</b>
+</td>
+</tr>
+</table>
+
+<!-- UOM LIST -->
+<datalist id="uoms">
+<option>Nos</option>
+<option>Pcs</option>
+<option>Set</option>
+<option>Pair</option>
+<option>SqFt</option>
+<option>SqM</option>
+<option>SqYd</option>
+<option>Meter</option>
+<option>Cm</option>
+<option>Mm</option>
+<option>Kg</option>
+<option>Gram</option>
+<option>Ton</option>
+<option>Litre</option>
+<option>Ml</option>
+<option>Hour</option>
+<option>Day</option>
+<option>Job</option>
+<option>Lot</option>
+<option>Box</option>
+<option>Bundle</option>
+</datalist>
+
+<script>
+let i=0;
+
+same.onchange=()=>{if(same.checked){
+sname.value=bname.value;
+saddr.value=baddr.value;
+sstate.value=bstate.value;
+spin.value=bpin.value;}}
+
+function addRow(){
+i++;
+let r=document.createElement("tr");
+r.innerHTML=`
+<td class="center">${i}</td>
+<td><textarea></textarea></td>
+<td><input></td>
+<td><input list="uoms" class="small"></td>
+<td><input type="number" value="1" oninput="calc()" class="small"></td>
+<td><input type="number" value="0" oninput="calc()" class="small"></td>
+<td><input type="number" value="0" oninput="calc()" class="small"></td>
+<td><input readonly></td>
+<td><input readonly></td>
+<td><input readonly></td>
+<td><input readonly></td>
+<td><input readonly></td>`;
+rows.appendChild(r);
+calc();
+}
+
+function calc(){
+let taxable=0,cg=0,sg=0,ig=0;
+[...rows.children].forEach(r=>{
+let c=r.querySelectorAll("input,textarea");
+let qty=+c[4].value||0;
+let rate=+c[5].value||0;
+let disc=+c[6].value||0;
+let gst=18; // default slab, editable later
+let base=qty*rate;
+base-=base*disc/100;
+c[7].value=base.toFixed(2);
+let intra=(bstate.value===sstate.value && bstate.value!=="");
+let cgst=0,sgst=0,igst=0;
+if(intra){
+cgst=base*(gst/2)/100;
+sgst=base*(gst/2)/100;
+}else{
+igst=base*gst/100;}
+c[8].value=cgst.toFixed(2);
+c[9].value=sgst.toFixed(2);
+c[10].value=igst.toFixed(2);
+c[11].value=(base+cgst+sgst+igst).toFixed(2);
+taxable+=base;cg+=cgst;sg+=sgst;ig+=igst;
+});
+ttax.innerText=taxable.toFixed(2);
+tcgst.innerText=cg.toFixed(2);
+tsgst.innerText=sg.toFixed(2);
+tigst.innerText=ig.toFixed(2);
+ttaxamt.innerText=(cg+sg+ig).toFixed(2);
+grand.innerText=(taxable+cg+sg+ig+(+round.value||0)).toFixed(2);
+}
+addRow();
+</script>
+
+</body>
+</html>

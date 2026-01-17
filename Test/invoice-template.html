@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Billing / Quotation</title>
+<style>
+body{font-family:Arial; padding:20px}
+table{border-collapse:collapse; width:100%; margin-top:10px}
+th,td{border:1px solid #999; padding:6px; text-align:center}
+th{background:#f2f2f2}
+input,select{width:100%; box-sizing:border-box}
+.summary{margin-top:15px; font-size:16px}
+.summary b{font-size:18px}
+.controls label{margin-right:15px}
+button{padding:5px 10px; cursor:pointer}
+.remove{color:red}
+</style>
+</head>
+
+<body>
+
+<h2>Billing / Quotation</h2>
+
+<div class="controls">
+  Tax Type:
+  <select id="taxType">
+    <option value="intra">CGST + SGST</option>
+    <option value="inter">IGST</option>
+  </select>
+
+  &nbsp;&nbsp; Columns:
+  <label><input type="checkbox" id="colSize" checked> Size</label>
+  <label><input type="checkbox" id="colUom" checked> UOM</label>
+  <label><input type="checkbox" id="colDiscPct" checked> Disc %</label>
+  <label><input type="checkbox" id="colDiscRate" checked> Disc Rate</label>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>Desc</th>
+  <th class="size">Size</th>
+  <th class="uom">UOM</th>
+  <th>Qty</th>
+  <th>HSN/SAC</th>
+  <th>Rate</th>
+  <th class="dp">Disc %</th>
+  <th class="dr">Disc Amt</th>
+  <th>Taxable</th>
+  <th>GST %</th>
+  <th>GST Amt</th>
+  <th>Net</th>
+  <th>X</th>
+</tr>
+</thead>
+
+<tbody id="rows"></tbody>
+</table>
+
+<button onclick="addRow()">+ Add Row</button>
+
+<div class="summary">
+  Taxable: ₹ <span id="tTax">0</span><br>
+  CGST: ₹ <span id="tCgst">0</span><br>
+  SGST: ₹ <span id="tSgst">0</span><br>
+  IGST: ₹ <span id="tIgst">0</span><br>
+  <b>Grand Total: ₹ <span id="tGrand">0</span></b>
+</div>
+
+<script>
+const rows = document.getElementById("rows");
+const taxType = document.getElementById("taxType");
+
+function addRow(){
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><input></td>
+    <td class="size"><input></td>
+    <td class="uom"><input></td>
+    <td><input type="number" value="1" min="0"></td>
+    <td><input></td>
+    <td><input type="number" value="0"></td>
+    <td class="dp"><input type="number" value="0"></td>
+    <td class="dr"><input type="number" value="0"></td>
+    <td>0</td>
+    <td>
+      <select>
+        <option>0</option>
+        <option>5</option>
+        <option>12</option>
+        <option>18</option>
+        <option>28</option>
+      </select>
+    </td>
+    <td>0</td>
+    <td>0</td>
+    <td><button class="remove" onclick="this.parentElement.parentElement.remove();calc()">✕</button></td>
+  `;
+  tr.querySelectorAll("input,select")
+    .forEach(el=>el.oninput=calc);
+  rows.appendChild(tr);
+  toggleCols();
+}
+
+function calc(){
+  let taxableT=0, cgstT=0, sgstT=0, igstT=0;
+
+  [...rows.children].forEach(tr=>{
+    const i = tr.querySelectorAll("input,select");
+
+    const qty = +i[3].value || 0;
+    const rate = +i[5].value || 0;
+    const discPct = +i[6]?.value || 0;
+    const discAmt = +i[7]?.value || 0;
+    const gstPct = +i[9].value || 0;
+
+    let base = qty * rate;
+    let discount = discAmt>0 ? discAmt : base * discPct/100;
+    let taxable = Math.max(base - discount,0);
+
+    let gst = taxable * gstPct/100;
+
+    let cgst=0, sgst=0, igst=0;
+    if(taxType.value==="intra"){
+      cgst = gst/2;
+      sgst = gst/2;
+    } else {
+      igst = gst;
+    }
+
+    tr.children[8].innerText = taxable.toFixed(2);
+    tr.children[10].innerText = gst.toFixed(2);
+    tr.children[11].innerText = (taxable+gst).toFixed(2);
+
+    taxableT+=taxable;
+    cgstT+=cgst; sgstT+=sgst; igstT+=igst;
+  });
+
+  document.getElementById("tTax").innerText = taxableT.toFixed(2);
+  document.getElementById("tCgst").innerText = cgstT.toFixed(2);
+  document.getElementById("tSgst").innerText = sgstT.toFixed(2);
+  document.getElementById("tIgst").innerText = igstT.toFixed(2);
+  document.getElementById("tGrand").innerText =
+    (taxableT+cgstT+sgstT+igstT).toFixed(2);
+}
+
+function toggleCols(){
+  document.querySelectorAll(".size")
+    .forEach(e=>e.style.display=
+      colSize.checked?"":"none");
+  document.querySelectorAll(".uom")
+    .forEach(e=>e.style.display=
+      colUom.checked?"":"none");
+  document.querySelectorAll(".dp")
+    .forEach(e=>e.style.display=
+      colDiscPct.checked?"":"none");
+  document.querySelectorAll(".dr")
+    .forEach(e=>e.style.display=
+      colDiscRate.checked?"":"none");
+}
+
+["colSize","colUom","colDiscPct","colDiscRate"]
+.forEach(id=>document.getElementById(id).onchange=toggleCols);
+
+taxType.onchange=calc;
+
+// init
+addRow();
+</script>
+
+</body>
+</html>

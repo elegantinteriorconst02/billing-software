@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Purchase Entry</title>
+
+<link rel="stylesheet" href="../assets/menu.css">
+
+<style>
+body{
+  font-family:Arial;
+  background:#f4f6fb;
+  padding:20px;
+}
+.card{
+  background:#fff;
+  padding:16px;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:20px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #eee}
+th{background:#f1f3f9}
+input,select,button{
+  padding:8px;width:100%;margin-bottom:8px;
+  border-radius:8px;border:1px solid #ccc
+}
+button{
+  background:#2d6cdf;color:#fff;border:none;cursor:pointer
+}
+button:hover{background:#1f4fd8}
+.right{text-align:right}
+</style>
+</head>
+
+<body>
+
+<div id="menu-holder"></div>
+
+<h2>🧾 Purchase Entry (Vendor Bill)</h2>
+
+<div class="card grid">
+
+  <div>
+    <label>Vendor</label>
+    <select id="vendorSelect"></select>
+<hr>
+
+<h3>📎 Purchase Bill Upload</h3>
+
+<input
+  type="file"
+  id="billFiles"
+  multiple
+  accept=".jpg,.jpeg,.png,.pdf"
+/>
+
+<div id="billPreview" style="margin-top:10px"></div>
+
+    <label>Bill No</label>
+    <input id="billNo">
+
+    <label>Date</label>
+    <input id="billDate" type="date">
+  </div>
+
+  <div>
+    <label>GST Type</label>
+    <select id="gstType">
+      <option value="intra">CGST + SGST</option>
+      <option value="inter">IGST</option>
+    </select>
+
+
+  </div>
+
+  
+</div>
+
+<div class="card">
+  <h3>Items</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>GST%</th>
+        <th>Rate</th>
+        <th>Qty</th>
+        <th>Total</th>
+        <th>X</th>
+      </tr>
+    </thead>
+    <tbody id="itemBody"></tbody>
+  </table>
+
+  <button onclick="addRow()">➕ Add Item</button>
+</div>
+
+<div class="card right">
+  <b>Grand Total: ₹ <span id="grand">0.00</span></b><br><br>
+  <button onclick="savePurchaseUI()">💾 Save Purchase</button>
+</div>
+
+<script src="../data/vendor.js"></script>
+<script src="../data/vendor-items.js"></script>
+<script src="../data/recyclebin.js"></script>
+<script src="../data/purchase.js"></script>
+
+<script>
+const vendorSelect = document.getElementById("vendorSelect");
+const itemBody = document.getElementById("itemBody");
+const grandEl = document.getElementById("grand");
+
+/* LOAD VENDORS */
+function loadVendors(){
+  vendorSelect.innerHTML = "<option value=''>Select Vendor</option>";
+  getVendors().forEach(v=>{
+    const o = document.createElement("option");
+    o.value = v.id;
+    o.textContent = v.name;
+    vendorSelect.appendChild(o);
+  });
+}
+
+/* ADD ITEM ROW */
+function addRow(){
+  const tr = document.createElement("tr");
+
+  tr.innerHTML = `
+    <td>
+      <input list="itemList" class="itemName">
+      <datalist class="itemList"></datalist>
+    </td>
+    <td><input type="number" class="itemGst" value="0"></td>
+    <td><input type="number" class="itemRate" value="0"></td>
+    <td><input type="number" class="itemQty" value="1"></td>
+    <td class="right total">0.00</td>
+    <td><button onclick="this.closest('tr').remove();calc()">✕</button></td>
+  `;
+
+  tr.querySelectorAll("input").forEach(i => i.oninput = calc);
+  itemBody.appendChild(tr);
+
+  loadVendorItems(tr);
+}
+function loadVendorItems(tr){
+  const vendorId = vendorSelect.value;
+  if(!vendorId) return;
+
+  const items = getItemsByVendor(vendorId);
+  const dl = tr.querySelector("datalist");
+  dl.innerHTML = "";
+
+  items.forEach(i=>{
+    const opt = document.createElement("option");
+    opt.value = i.name;
+    opt.dataset.rate = i.rate;
+    opt.dataset.gst = i.gst;
+    dl.appendChild(opt);
+  });
+
+  tr.querySelector(".itemName").onchange = e =>{
+    const o = [...dl.children].find(x=>x.value===e.target.value);
+    if(o){
+      tr.querySelector(".itemRate").value = o.dataset.rate;
+      tr.querySelector(".itemGst").value  = o.dataset.gst;
+      calc();
+    }
+  };
+}
+
+
+/* CALC */
+function calc(){
+  let total = 0;
+  itemBody.querySelectorAll("tr").forEach(tr=>{
+    const rate = +tr.children[2].children[0].value;
+    const qty  = +tr.children[3].children[0].value;
+    const val = rate * qty;
+    tr.children[4].innerText = val.toFixed(2);
+    total += val;
+  });
+  grandEl.innerText = total.toFixed(2);
+}
+
+/* SAVE PURCHASE */
+function savePurchaseUI(){
+  if(!vendorSelect.value) return alert("Select vendor");
+
+  const items = [];
+  itemBody.querySelectorAll("tr").forEach(tr=>{
+    items.push({
+      item: tr.children[0].children[0].value,
+      gst:  tr.children[1].children[0].value,
+      rate: tr.children[2].children[0].value,
+      qty:  tr.children[3].children[0].value,
+      total: tr.children[4].innerText
+    });
+  });
+
+  savePurchase({
+    vendorId: vendorSelect.value,
+    billNo: billNo.value,
+    date: billDate.value,
+    total: grand.innerText,
+    items
+  });
+
+  alert("Purchase Saved");
+  itemBody.innerHTML = "";
+  grand.innerText = "0.00";
+}
+
+/* INIT */
+loadVendors();
+addRow();
+
+/* AUTO DATE */
+billDate.value = new Date().toISOString().slice(0,10);
+</script>
+
+<script src="../shared/menu.js"></script>
+<script>
+fetch("../shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu-holder").innerHTML = html;
+    initMenu();
+  });
+</script>
+
+</body>
+</html>

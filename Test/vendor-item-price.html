@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vendor Item Price Mapping</title>
+</head>
+<body>
+
+  <h2>Vendor – Item Price Mapping</h2>
+
+  <!-- Vendor Dropdown -->
+  <select id="vendorSelect">
+    <option value="">Select Vendor</option>
+  </select>
+
+  <!-- Item Dropdown -->
+  <select id="itemSelect">
+    <option value="">Select Item</option>
+  </select>
+
+  <input id="price" type="number" placeholder="Purchase Rate">
+
+  <button id="saveBtn">Save Price</button>
+
+  <p id="msg"></p>
+
+  <hr>
+
+  <h3>Saved Vendor Item Prices</h3>
+
+  <table border="1" cellpadding="6">
+    <thead>
+      <tr>
+        <th>Vendor</th>
+        <th>Item</th>
+        <th>Purchase Rate</th>
+      </tr>
+    </thead>
+    <tbody id="priceTable"></tbody>
+  </table>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc
+    } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJliCUJkElsPwbJUGrTUmB7EPyiGaCniQ",
+      authDomain: "eic-billing-software-55635.firebaseapp.com",
+      projectId: "eic-billing-software-55635",
+      storageBucket: "eic-billing-software-55635.firebasestorage.app",
+      messagingSenderId: "376103136888",
+      appId: "1:376103136888:web:ae1ab4d7195037a529478d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const vendorSelect = document.getElementById("vendorSelect");
+    const itemSelect = document.getElementById("itemSelect");
+    const priceEl = document.getElementById("price");
+    const msgEl = document.getElementById("msg");
+    const tableEl = document.getElementById("priceTable");
+
+    let vendors = {};
+    let items = {};
+
+    // Load vendors
+    async function loadVendors() {
+      const snap = await getDocs(collection(db, "vendors"));
+      snap.forEach(doc => {
+        const v = doc.data();
+        vendors[doc.id] = v.name;
+        vendorSelect.innerHTML +=
+          `<option value="${doc.id}">${v.name}</option>`;
+      });
+    }
+
+    // Load items
+    async function loadItems() {
+      const snap = await getDocs(collection(db, "items"));
+      snap.forEach(doc => {
+        const i = doc.data();
+        items[doc.id] = i.name;
+        itemSelect.innerHTML +=
+          `<option value="${doc.id}">${i.name}</option>`;
+      });
+    }
+
+    // Load price table
+    async function loadPrices() {
+      tableEl.innerHTML = "";
+      const snap = await getDocs(collection(db, "vendor_item_prices"));
+
+      snap.forEach(doc => {
+        const d = doc.data();
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${vendors[d.vendorId] || ""}</td>
+          <td>${items[d.itemId] || ""}</td>
+          <td>₹ ${d.price}</td>
+        `;
+        tableEl.appendChild(tr);
+      });
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      if (!vendorSelect.value || !itemSelect.value || !priceEl.value) {
+        msgEl.innerText = "❌ All fields required";
+        return;
+      }
+
+      await addDoc(collection(db, "vendor_item_prices"), {
+        vendorId: vendorSelect.value,
+        itemId: itemSelect.value,
+        price: Number(priceEl.value),
+        createdAt: new Date()
+      });
+
+      msgEl.innerText = "✅ Price saved";
+      priceEl.value = "";
+
+      loadPrices();
+    });
+
+    // Init
+    await loadVendors();
+    await loadItems();
+    await loadPrices();
+  </script>
+
+</body>
+</html>

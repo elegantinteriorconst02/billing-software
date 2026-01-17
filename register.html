@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Records / Register</title>
+
+<!-- MENU STYLE (same as index) -->
+<style>
+
+body{font-family:Arial;margin:0;padding:20px}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+th,td{
+  border:1px solid #999;
+  padding:6px;
+  font-size:13px;
+}
+th{background:#eee}
+
+.filter{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+input,select{
+  padding:4px;
+}
+
+.action-btn{
+  cursor:pointer;
+  color:#2d6cdf;
+  text-decoration:underline;
+  margin-right:8px;
+}
+
+</style>
+
+<link rel="stylesheet" href="assets/menu.css">
+
+
+
+<!-- STORAGE -->
+<script src="data/storage.js"></script>
+<script src="data/recyclebin.js"></script>
+<script src="data/bills.js"></script>
+</head>
+
+<body>
+
+
+
+
+    <!-- MENU BUTTON -->
+<button id="menuBtn" onclick="toggleMenu()">☰</button>
+
+<div id="sidebar">
+  <h3>Billing App</h3>
+
+  <a href="index.html" data-page="index" onclick="toggleMenu(false)">
+    🧾 Billing <span class="activeDot"></span>
+  </a>
+
+  <a href="masters/client.html" data-page="client" onclick="toggleMenu(false)">
+    👤 Client Master <span class="activeDot"></span>
+  </a>
+
+  <a href="register.html" data-page="register" onclick="toggleMenu(false)">
+    📂 Records <span class="activeDot"></span>
+  </a>
+</div>
+
+<div id="overlay" onclick="toggleMenu(false)"></div>
+<div id="menuContainer"></div>
+
+
+<!-- 🔍 FILTER -->
+<div class="filter">
+  <!-- Client -->
+  <input id="fClient" placeholder="Client Name">
+
+
+  <!-- GST -->
+  <input id="fGst" placeholder="GST">
+  <select id="fType">
+    <option value="">All Types</option>
+    <option value="tax-invoice">Invoice</option>
+    <option value="quotation">Quotation</option>
+    <option value="proforma invoice">Proforma</option>
+  </select>
+
+<!-- Date Range -->
+  <input type="date" id="fFrom">
+  <input type="date" id="fTo">
+
+  <!-- Month -->
+  <input type="month" id="fMonth">
+
+  <!-- Year -->
+  <select id="fYear">
+    <option value="">All Years</option>
+  </select>
+
+  <button onclick="load()">Apply</button>
+  <button onclick="resetFilters()">Reset</button>
+
+</div>
+<div>
+  <button onclick="load()">Search</button>
+</div>
+
+
+<div style="margin-top:10px">
+  <button onclick="exportCSV()">⬇ Export CSV</button>
+</div>
+
+
+
+<script>
+function exportExcel(){
+  const bills = getBills();
+
+
+
+  
+
+
+  /* -------- Sheet 1 : All Bills -------- */
+  const sheet1 = bills.map(b => ({
+    Date: b.date,
+    Type: b.type,
+    Number: b.number,
+    Client: b.clientName,
+    GST: b.gst,
+    Amount: b.total
+  }));
+
+  /* -------- Sheet 2 : Monthly Summary -------- */
+  const summary = {};
+  bills.forEach(b=>{
+    const month = (b.date || "").slice(0,7); // YYYY-MM
+    if(!summary[month]) summary[month] = { count:0, total:0 };
+    summary[month].count++;
+    summary[month].total += Number(b.total || 0);
+  });
+
+  const sheet2 = Object.keys(summary).map(m => ({
+    Month: m,
+    Bills: summary[m].count,
+    TotalAmount: summary[m].total.toFixed(2)
+  }));
+
+  /* -------- Create Workbook -------- */
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet1), "Bills");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet2), "Monthly Summary");
+
+  XLSX.writeFile(wb, "Billing-Export.xlsx");
+}
+</script>
+
+<div style="margin:15px 0;display:flex;gap:10px;flex-wrap:wrap">
+
+<hr>
+
+<div style="margin:10px 0">
+  <b>Client Ledger</b><br>
+
+  <input type="text" id="ledgerClient"
+         placeholder="Client name"
+         list="clientListLedger">
+
+  <button onclick="exportClientLedger()">📘 Export Ledger</button>
+
+  <datalist id="clientListLedger"></datalist>
+</div>
+
+
+
+
+  <input type="month" id="exportMonth">
+  <button onclick="exportMonthlyExcel()">📊 Monthly Excel</button>
+  <button onclick="exportMonthlyGST()">🧾 GST Summary</button>
+</div>
+
+
+<!-- 📋 TABLE -->
+<table>
+<thead>
+<tr>
+    <!-- ✅ SELECT ALL -->
+      <th><input type="checkbox" onclick="toggleAll(this)"></th>
+  <th>Date</th>
+  <th>Type</th>
+  <th>No</th>
+  <th>Client</th>
+  <th>GST</th>
+  <th>Amount</th>
+  <th>Actions</th>
+</tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+
+<script>
+/* ===== MENU JS ===== */
+function toggleMenu(){
+  document.body.classList.toggle("menu-open");
+}
+(function(){
+  document.querySelectorAll("#sidebar a").forEach(a=>{
+    if(a.dataset.page==="register") a.classList.add("active");
+  });
+})();
+</script>
+
+<script>
+/* ===== LOAD RECORDS ===== */
+function load(){
+  const name  = fClient.value.toLowerCase();
+  const gst   = fGst.value.toLowerCase();
+  const type  = fType.value.toLowerCase();
+  const from  = fFrom.value;
+  const to    = fTo.value;
+  const month = fMonth.value;   // YYYY-MM
+  const year  = fYear.value;
+
+  rows.innerHTML = "";
+
+  getBills().filter(b=>{
+    const d = b.date || "";
+
+    return (
+      (!name  || b.clientName.toLowerCase().includes(name)) &&
+      (!gst   || (b.gst || "").toLowerCase().includes(gst)) &&
+      (!type  || b.type === type) &&
+      (!from  || d >= from) &&
+      (!to    || d <= to) &&
+      (!month || d.startsWith(month)) &&
+      (!year  || d.startsWith(year))
+    );
+  }).forEach(b=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="checkbox" class="rowCheck"></td>
+      <td>${b.date}</td>
+      <td>${b.type}</td>
+      <td>${b.number}</td>
+      <td>${b.clientName}</td>
+      <td>${b.gst}</td>
+      <td style="text-align:right">${b.total}</td>
+      <td>
+        <span class="action-btn" onclick="editBill('${b.id}')">Edit</span>
+        <span class="action-btn" onclick="printBill('${b.id}')">Print</span>
+      </td>
+    `;
+    rows.appendChild(tr);
+  });
+
+  renderSummary();
+}
+
+
+function editBill(id){
+  location.href = "index.html?id=" + id;
+}
+
+function printBill(id){
+  const bill = getBillById(id);
+  localStorage.setItem("printData", JSON.stringify(bill.data));
+  window.open("invoice-print.html","_blank");
+}
+
+load();
+
+
+
+
+function exportCSV(){
+  const bills = getBills();
+
+  let csv = "Date,Type,Number,Client,GST,Amount\n";
+
+  bills.forEach(b=>{
+    csv += [
+      b.date,
+      b.type,
+      b.number,
+      b.clientName,
+      b.gst,
+      b.total
+    ].map(v => `"${v || ""}"`).join(",") + "\n";
+  });
+
+  downloadFile(csv, "Bills-Export.csv");
+}
+
+function downloadFile(content, filename){
+  const blob = new Blob([content], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+
+
+
+/* ===== LOAD BILL FOR EDIT ===== */
+(function(){
+  const id = new URLSearchParams(location.search).get("id");
+  if(!id) return;
+
+  const bill = getBillById(id);
+  if(!bill) return;
+
+  // Basic
+  docType.value = bill.type;
+  docNo.value = bill.number;
+  docDate.value = bill.date;
+
+  billName.value = bill.clientName;
+  billGst.value = bill.gst;
+
+  // Load print data (easy reuse)
+  const d = bill.data;
+
+  // clear existing rows
+  document.querySelectorAll("#tbody tr").forEach(tr=>tr.remove());
+
+  d.rows.forEach(r=>{
+    addRow();
+    const tr = tbody.lastChild;
+    tr.querySelector("textarea").value = r.desc;
+    tr.querySelector(".size input").value = r.size;
+    tr.querySelector(".uom input").value = r.uom;
+    tr.querySelector(".hsn input").value = r.hsn;
+    tr.querySelector(".qty").value = r.qty;
+    tr.querySelector(".rate").value = r.rate;
+    tr.querySelector(".discPct").value = r.disc;
+  });
+
+  calc();
+})();
+
+
+</script>
+
+<script>
+function toggleMenu(force){
+  if(force === false){
+    document.body.classList.remove("menu-open");
+  }else{
+    document.body.classList.toggle("menu-open");
+  }
+}
+
+/* ACTIVE MENU */
+(function(){
+  const page = location.pathname.split("/").pop();
+  document.querySelectorAll("#sidebar a").forEach(a=>{
+    if(page.includes(a.dataset.page)){
+      a.classList.add("active");
+    }
+  });
+})();
+</script>
+
+<h3>Monthly Summary</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Month</th>
+      <th>No. of Bills</th>
+      <th>Total Amount</th>
+    </tr>
+  </thead>
+  <tbody id="summaryRows"></tbody>
+</table>
+
+
+
+<script>
+function exportExcel(){
+  const bills = getBills();
+
+  /* -------- Sheet 1 : All Bills -------- */
+  const sheet1 = bills.map(b => ({
+    Date: b.date,
+    Type: b.type,
+    Number: b.number,
+    Client: b.clientName,
+    GST: b.gst,
+    Amount: b.total
+  }));
+
+  /* -------- Sheet 2 : Monthly Summary -------- */
+  const summary = {};
+  bills.forEach(b=>{
+    const month = (b.date || "").slice(0,7); // YYYY-MM
+    if(!summary[month]) summary[month] = { count:0, total:0 };
+    summary[month].count++;
+    summary[month].total += Number(b.total || 0);
+  });
+
+  const sheet2 = Object.keys(summary).map(m => ({
+    Month: m,
+    Bills: summary[m].count,
+    TotalAmount: summary[m].total.toFixed(2)
+  }));
+
+  /* -------- Create Workbook -------- */
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet1), "Bills");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet2), "Monthly Summary");
+
+  XLSX.writeFile(wb, "Billing-Export.xlsx");
+}
+
+(function fillYears(){
+  const years = new Set();
+
+  getBills().forEach(b=>{
+    if(b.date) years.add(b.date.slice(0,4));
+  });
+
+  [...years].sort().forEach(y=>{
+    const o = document.createElement("option");
+    o.value = y;
+    o.textContent = y;
+    fYear.appendChild(o);
+  });
+})();
+
+
+</script>
+
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu-holder").innerHTML = html;
+    initMenu();
+  });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="export/excel.js"></script>
+
+
+
+<script>
+(function fillClientLedgerList(){
+  const bills = JSON.parse(localStorage.getItem("bills")||"[]");
+  const set = new Set();
+  bills.forEach(b => b.clientName && set.add(b.clientName));
+
+  const dl = document.getElementById("clientListLedger");
+  if(!dl) return;
+
+  dl.innerHTML = "";
+  [...set].forEach(name=>{
+    const o = document.createElement("option");
+    o.value = name;
+    dl.appendChild(o);
+  });
+})();
+</script>
+
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r => {
+    if(!r.ok) throw new Error("menu not found");
+    return r.text();
+  })
+  .then(html => {
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  })
+  .catch(err => console.error("MENU LOAD ERROR:", err));
+</script>
+
+
+
+</body>
+</html>

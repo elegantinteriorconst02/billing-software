@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Invoice Print</title>
+
+<style>
+@media print{
+  body{
+    padding:20px;
+    font-size:12px;
+  }
+}
+
+body{
+  font-family:Arial;
+  padding:30px;
+}
+
+table{
+  border-collapse:collapse;
+  width:100%;
+}
+
+th,td{
+  border:1px solid #000;
+  padding:6px;
+}
+
+th{
+  background:#f0f0f0;
+}
+
+/* ALIGNMENTS */
+.right{
+  text-align:right;
+}
+.center{
+  text-align:center;
+}
+
+/* COPY TAG (ORIGINAL / DUPLICATE etc) */
+.copyTag{
+  position:fixed;
+  top:10px;
+  left:10px;
+  font-size:13px;
+  font-weight:bold;
+  border:1px solid #000;
+  padding:4px 10px;
+}
+
+/* PAID / UNPAID */
+.paid{
+  color:green;
+  font-weight:bold;
+}
+.unpaid{
+  color:red;
+  font-weight:bold;
+}
+
+/* ============================
+   SL COLUMN STYLE (FIXED)
+   ============================ */
+th:first-child,
+td:first-child{
+  width: 120px;
+  text-align:left;
+  font-weight:bold;
+  background:#fafafa;
+}
+
+/* PRINT SAFE SL */
+@media print{
+  th:first-child,
+  td:first-child{
+    width:100px;
+    font-size:11px;
+  }
+}
+/* FIX DATE ALIGN */
+td:nth-child(4){
+  text-align:left;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="copyTag" id="copyTag">ORIGINAL</div>
+
+<!-- HEADER -->
+<div style="display:flex;align-items:center;margin-bottom:10px">
+  <div style="flex:1"></div>
+  <div style="flex:1;text-align:center">
+    <img id="logoImg" style="max-height:120px;display:none">
+  </div>
+  <div style="flex:1;text-align:right;font-size:18px;font-weight:bold" id="docTitle"></div>
+</div>
+
+<!-- COMPANY -->
+<div class="center" style="margin-bottom:10px">
+  <div id="companyName" style="font-weight:bold"></div>
+  <div id="companyAddr"></div>
+  <div id="companyContact"></div>
+  <div id="companyTax"></div>
+</div>
+
+<!-- DOCUMENT META -->
+<table>
+<table style="width:100%;table-layout:fixed">
+  <tr>
+    <td style="width:18%"><b>Document No:</b></td>
+    <td style="width:32%" id="pDocNo"></td>
+    <td style="width:18%"><b>Document Date:</b></td>
+    <td style="width:32%" id="pDocDate"></td>
+  </tr>
+<tr>
+    <td><b>Reference No:</b></td>
+    <td id="pRefNo"></td>
+    <td><b>Reference Date:</b></td>
+    <td id="pRefDate"></td>
+  </tr>
+<tr>
+    <td><b>Order No:</b></td>
+    <td id="pOrderNo"></td>
+    <td><b>Order Date:</b></td>
+    <td id="pOrderDate"></td>
+  </tr>
+<tr>
+    <td><b>Challan No:</b></td>
+    <td id="pChallanNo"></td>
+    <td><b>Challan Date:</b></td>
+    <td id="pChallanDate"></td>
+  </tr>
+
+<tr>
+    <td><b>E-Way Bill No:</b></td>
+    <td id="pEwayNo"></td>
+    <td><b>E-Way Bill Date:</b></td>
+    <td id="pEwayDate"></td>
+  </tr>
+</table>
+<!-- E-WAY BILL -->
+<table style="margin-bottom:8px">
+  <tr>
+    
+  </tr>
+
+<!-- BILL / SHIP -->
+<table style="margin-top:8px">
+<tr>
+<td width="50%">
+<b>Billed To</b><br>
+<b id="pBillName"></b><br>
+<span id="pBillAddr"></span><br>
+<span id="pBillPin"></span> <span id="pBillState"></span><br>
+<span id="pBillMob"></span><br>
+<span id="pBillEmail"></span><br>
+<span id="pBillGst"></span>
+</td>
+
+<td width="50%">
+<b>Shipped To</b><br>
+<b id="pShipName"></b><br>
+<span id="pShipAddr"></span><br>
+<span id="pShipPin"></span> <span id="pShipState"></span>
+</td>
+</tr>
+</table>
+
+<!-- ITEMS -->
+<table style="margin-top:10px">
+<thead>
+<tr>
+  <th>SL</th>
+  <th>Description</th>
+  <th>Size</th>
+  <th>UOM</th>
+  <th>HSN</th>
+  <th>Qty</th>
+  <th>Rate</th>
+  <th>Disc</th>
+  <th>Taxable</th>
+  <th>GST%</th>
+  <th>CGST</th>
+  <th>SGST</th>
+  <th>IGST</th>
+  <th>Net</th>
+</tr>
+</thead>
+
+
+
+<tbody id="printBody"></tbody>
+</table>
+
+<!-- TOTALS -->
+<table style="width:40%;margin-left:auto;margin-top:10px">
+<tr><td>Taxable</td><td class="right" id="tTax"></td></tr>
+<tr><td>CGST</td><td class="right" id="tCgst"></td></tr>
+<tr><td>SGST</td><td class="right" id="tSgst"></td></tr>
+<tr><td>IGST</td><td class="right" id="tIgst"></td></tr>
+<tr><td>Round Off</td><td class="right" id="tRound"></td></tr>
+<tr><th>Grand Total</th><th class="right" id="tGrand"></th></tr>
+<tr><td colspan="2"><b>Amount (in words):</b><span id="tWords"></span></td></tr>
+
+<tr id="rcmRow" style="display:none">
+<td colspan="2"><b>GST Payable on Reverse Charge</b></td>
+</tr>
+</table>
+
+<!-- PAYMENT -->
+<table id="paymentTable" style="width:40%;margin-left:auto;margin-top:10px">
+  <tr>
+    <td>Advance Paid</td>
+    <td class="right">
+      <input type="number" id="pAdvance"
+        style="width:100%;text-align:right;border:0;border-bottom:1px solid #000">
+    </td>
+  </tr>
+
+  <tr>
+    <th>Amount Due</th>
+    <th class="right">
+      <input type="number" id="pDue" readonly
+        style="width:100%;text-align:right;border:0;border-bottom:1px solid #000">
+    </th>
+  </tr>
+
+  <tr>
+    <td colspan="2" class="center" id="paidStatus"></td>
+  </tr>
+</table>
+
+<hr>
+
+<!-- NOTE / BANK / SIGN -->
+<table>
+<tr>
+<td width="60%">
+<b>Note</b><br>
+<span id="pNote"></span><br><br>
+
+<b>Terms & Conditions</b><br>
+<span id="pTerms"></span>
+</td>
+
+<td width="40%" class="center">
+<img id="pStamp" style="max-height:90px;display:none"><br>
+<img id="pSign" style="max-height:90px;display:none"><br>
+<b>Authorised Signatory</b>
+</td>
+</tr>
+</table>
+
+<script>
+const data = JSON.parse(localStorage.getItem("printData"));
+if(!data){ alert("No print data"); }
+
+const fd=d=>d?new Date(d).toLocaleDateString("en-GB"):"";
+
+/* BASIC */
+docTitle.innerText = data.docType || "INVOICE";
+pDocNo.innerText=data.docNo||"";
+pDocDate.innerText=fd(data.docDate);
+pRefNo.innerText=data.refNo||"";
+pRefDate.innerText=fd(data.refDate);
+pOrderNo.innerText=data.orderNo||"";
+pOrderDate.innerText=fd(data.orderDate);
+pChallanNo.innerText=data.challanNo||"";
+pChallanDate.innerText=fd(data.challanDate);
+pEwayNo.innerText=data.ewayNo||"";
+pEwayDate.innerText=fd(data.ewayDate);
+
+
+/* COMPANY */
+companyName.innerText=data.company?.name||"";
+companyAddr.innerText=data.company?.addr||"";
+companyContact.innerText=[data.company?.phone,data.company?.email].filter(Boolean).join(" | ");
+companyTax.innerText=data.company?.gst?"GST: "+data.company.gst:"";
+
+/* LOGO (FIXED) */
+const logo = localStorage.getItem("logo");
+if(logo){
+  logoImg.src = logo;
+  logoImg.style.display="block";
+}
+
+/* BILL */
+pBillName.innerText=data.bill?.name||"";
+pBillAddr.innerText=data.bill?.addr||"";
+pBillPin.innerText=data.bill?.pin||"";
+pBillState.innerText=data.bill?.state||"";
+pBillMob.innerText=data.bill?.mob||"";
+pBillEmail.innerText=data.bill?.email||"";
+pBillGst.innerText=data.bill?.gst||"";
+
+/* SHIP */
+pShipName.innerText=data.ship?.name||"";
+pShipAddr.innerText=data.ship?.addr||"";
+pShipPin.innerText=data.ship?.pin||"";
+pShipState.innerText=data.ship?.state||"";
+
+/* ITEMS */
+data.rows.forEach((r,i)=>{
+printBody.innerHTML += `
+<tr>
+  <td class="center">${i + 1}</td>
+  <td>${r.desc}</td>
+  <td class="center">${r.size}</td>
+  <td class="center">${r.uom}</td>
+  <td class="center">${r.hsn}</td>
+  <td class="right">${r.qty}</td>
+  <td class="right">${r.rate}</td>
+  <td class="right">${r.disc}</td>
+  <td class="right">${r.taxable}</td>
+  <td class="center">${r.gstRate}%</td>
+  <td class="right">${r.cgst}</td>
+  <td class="right">${r.sgst}</td>
+  <td class="right">${r.igst}</td>
+  <td class="right">${r.net}</td>
+</tr>
+`;
+
+});
+
+/* TOTALS */
+tTax.innerText = data.totals.taxable;
+tCgst.innerText = data.totals.cgst;
+tSgst.innerText = data.totals.sgst;
+tIgst.innerText = data.totals.igst;
+tRound.innerText = data.totals.roundOff||"0.00";
+tGrand.innerText = data.totals.grand;
+
+if(data.totals.inWords){
+  tWords.innerText = data.totals.inWords;
+}
+
+
+/* ADV / DUE */
+const adv=Number(data.advance||0);
+const due=Number(data.totals.grand||0)-adv;
+pAdvance.innerText=adv.toFixed(2);
+pDue.innerText=due.toFixed(2);
+paidStatus.innerHTML=due<=0?'<span class="paid">PAID</span>':'<span class="unpaid">ॐ</span>';
+
+/* NOTE / TERMS */
+pNote.innerText=data.company?.note||"";
+pTerms.innerText=data.company?.terms||"";
+
+/* STAMP & SIGN (FIXED) */
+const stamp = localStorage.getItem("stamp");
+if(stamp){
+  pStamp.src=stamp;
+  pStamp.style.display="block";
+}
+const sign = localStorage.getItem("sign");
+if(sign){
+  pSign.src=sign;
+  pSign.style.display="block";
+}
+
+/* RCM */
+if(data.reverseCharge){ rcmRow.style.display=""; }
+
+/* PAYMENT HIDE IF EMPTY */
+const advVal = Number(pAdvance.value || 0);
+if (advVal <= 0) {
+  paymentTable.style.display = "none";
+}
+
+const copyType = data.copyType || "ORIGINAL";
+
+const copyMap = {
+  original: "ORIGINAL (BUYER'S COPY)",
+  seller: "SELLER'S COPY",
+  duplicate: "DUPLICATE",
+  triplicate: "TRIPLICATE"
+};
+
+copyTag.innerText = copyMap[copyType] || "ORIGINAL (BUYER'S COPY)";
+
+window.print();
+</script>
+
+
+</body>
+</html>

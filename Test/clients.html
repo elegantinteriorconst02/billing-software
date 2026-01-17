@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client Master</title>
+</head>
+<body>
+
+  <h2>Client Master</h2>
+
+  <input id="name" placeholder="Client Name">
+  <input id="phone" placeholder="Phone">
+  <input id="email" placeholder="Email">
+  <input id="gst" placeholder="GSTIN">
+
+  <br><br>
+
+  <button id="saveBtn">Save Client</button>
+
+  <p id="msg"></p>
+
+  <hr>
+
+  <h3>Client List</h3>
+
+  <input id="search" placeholder="Search by name or phone">
+
+  <ul id="clientList"></ul>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJliCUJkElsPwbJUGrTUmB7EPyiGaCniQ",
+      authDomain: "eic-billing-software-55635.firebaseapp.com",
+      projectId: "eic-billing-software-55635",
+      storageBucket: "eic-billing-software-55635.firebasestorage.app",
+      messagingSenderId: "376103136888",
+      appId: "1:376103136888:web:ae1ab4d7195037a529478d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const nameEl = document.getElementById("name");
+    const phoneEl = document.getElementById("phone");
+    const emailEl = document.getElementById("email");
+    const gstEl = document.getElementById("gst");
+    const msgEl = document.getElementById("msg");
+    const listEl = document.getElementById("clientList");
+    const searchEl = document.getElementById("search");
+
+    let clients = [];
+
+    async function loadClients() {
+      listEl.innerHTML = "";
+      const snapshot = await getDocs(collection(db, "clients"));
+      clients = [];
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        clients.push({ id: doc.id, ...data });
+        addToList(data);
+      });
+    }
+
+    function addToList(client) {
+      const li = document.createElement("li");
+      li.textContent = `${client.name} - ${client.phone || ""}`;
+      listEl.appendChild(li);
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      if (!nameEl.value) {
+        msgEl.innerText = "❌ Name required";
+        return;
+      }
+
+      await addDoc(collection(db, "clients"), {
+        name: nameEl.value,
+        phone: phoneEl.value,
+        email: emailEl.value,
+        gst: gstEl.value,
+        createdAt: new Date()
+      });
+
+      msgEl.innerText = "✅ Client saved";
+
+      nameEl.value = phoneEl.value = emailEl.value = gstEl.value = "";
+
+      loadClients();
+    });
+
+    searchEl.addEventListener("input", () => {
+      const q = searchEl.value.toLowerCase();
+      listEl.innerHTML = "";
+      clients
+        .filter(c =>
+          c.name.toLowerCase().includes(q) ||
+          (c.phone || "").includes(q)
+        )
+        .forEach(addToList);
+    });
+
+    loadClients();
+  </script>
+
+
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu-holder").innerHTML = html;
+    initMenu();
+  });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
+
+<link rel="stylesheet" href="assets/menu.css">
+<link rel="stylesheet" href="assets/dashboard.css">
+
+</head>
+
+<body>
+<div id="menuContainer"></div>
+
+<h2>📊 Dashboard</h2>
+
+<!-- ===== STATS ===== -->
+<div class="grid">
+
+  <div class="card c1">
+    <h3>🧾 Total Invoices</h3>
+    <b id="totalBills">0</b>
+    <div class="sub">All time</div>
+  </div>
+
+  <div class="card c2">
+    <h3>💰 Total Sales</h3>
+    <b id="totalSales">₹ 0</b>
+    <div class="sub">All time</div>
+  </div>
+
+  <div class="card c3">
+    <h3>🧮 Total GST</h3>
+    <b id="totalGst">₹ 0</b>
+    <div class="sub">Collected</div>
+  </div>
+
+  <div class="card c4">
+    <h3>📆 This Month Sales</h3>
+    <b id="monthSales">₹ 0</b>
+    <div class="sub">Current month</div>
+  </div>
+
+</div>
+
+<!-- ===== QUICK ACTIONS ===== -->
+<div class="box">
+  <h3>⚡ Quick Actions</h3>
+
+  <div class="quick">
+    <a href="index.html">➕ New Bill</a>
+    <a href="masters/client.html">👤 Clients</a>
+    <a href="masters/vendor.html">🏭 Vendors</a>
+    <a href="register.html">📂 Records</a>
+  </div>
+</div>
+
+<!-- ===== SCRIPTS ===== -->
+<script src="data/bills.js"></script>
+<script src="data/dashboard.js"></script>
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
+</script>
+
+</body>
+</html>

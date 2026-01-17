@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Recycle Bin</title>
+
+<link rel="stylesheet" href="assets/menu.css">
+
+<style>
+body{
+  font-family:Arial;
+  background:#f4f6fb;
+  padding:20px;
+}
+
+h2{margin-bottom:12px}
+
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+th,td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  text-align:left;
+}
+
+th{
+  background:#eef2ff;
+  color:#1f3c88;
+}
+
+.badge{
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:bold;
+  text-transform:uppercase;
+}
+
+.badge.client{background:#e7f7ef;color:#198754}
+.badge.vendor{background:#fff3cd;color:#856404}
+.badge.bill{background:#e8f0ff;color:#1f4fd8}
+
+.actions button{
+  margin-right:6px;
+  padding:6px 10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.restore{background:#198754;color:#fff}
+.delete{background:#dc3545;color:#fff}
+
+.small{font-size:12px;color:#666}
+</style>
+</head>
+
+<body>
+
+<div id="menuContainer"></div>
+
+<h2>🗑 Recycle Bin</h2>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Details</th>
+        <th>Deleted On</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="binTable"></tbody>
+  </table>
+
+  <div class="small" style="margin-top:10px">
+    ♻ Items older than 30 days are automatically removed.
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="data/storage.js"></script>
+<script src="data/recyclebin.js"></script>
+
+<script>
+const table = document.getElementById("binTable");
+
+function renderRecycleBin(){
+  const list = getRecycleBin();
+  table.innerHTML = "";
+
+  if(list.length === 0){
+    table.innerHTML = `
+      <tr>
+        <td colspan="4" class="small">Recycle bin is empty</td>
+      </tr>`;
+    return;
+  }
+
+  list.forEach(item=>{
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>
+        <span class="badge ${item.type}">
+          ${item.type}
+        </span>
+      </td>
+      <td>
+        ${getLabel(item)}
+      </td>
+      <td>
+        ${new Date(item.deletedAt).toLocaleDateString()}
+      </td>
+      <td class="actions">
+        <button class="restore" onclick="restore('${item.id}')">Restore</button>
+        <button class="delete" onclick="remove('${item.id}')">Delete</button>
+      </td>
+    `;
+
+    table.appendChild(tr);
+  });
+}
+
+function getLabel(item){
+  if(item.type === "client"){
+    return item.data.name || "(Client)";
+  }
+  if(item.type === "vendor"){
+    return item.data.name || "(Vendor)";
+  }
+  if(item.type === "bill"){
+    return `${item.data.type || "Bill"} : ${item.data.number || ""}`;
+  }
+  return "-";
+}
+
+function restore(id){
+  if(confirm("Restore this item?")){
+    restoreFromRecycleBin(id);
+    renderRecycleBin();
+  }
+}
+
+function remove(id){
+  if(confirm("Delete permanently?")){
+    deleteFromRecycleBin(id);
+    renderRecycleBin();
+  }
+}
+
+renderRecycleBin();
+</script>
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
+</script>
+
+</body>
+</html>

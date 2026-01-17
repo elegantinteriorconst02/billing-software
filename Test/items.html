@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Item / Service Master</title>
+</head>
+<body>
+
+  <h2>Item / Service Master</h2>
+
+  <input id="name" placeholder="Item / Service Name">
+  <input id="category" placeholder="Category (Optional)">
+  <input id="rate" type="number" placeholder="Rate">
+  <input id="uom" placeholder="UOM (SqFt, Nos, Job)">
+  <input id="gst" type="number" placeholder="GST %">
+
+  <label>
+    <input type="checkbox" id="active" checked>
+    Active
+  </label>
+
+  <br><br>
+
+  <button id="saveBtn">Save Item</button>
+  <p id="msg"></p>
+
+  <hr>
+
+  <h3>Item List</h3>
+
+  <input
+    id="search"
+    placeholder="Search by Name / Category / UOM / GST">
+
+  <ul id="itemList"></ul>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAJliCUJkElsPwbJUGrTUmB7EPyiGaCniQ",
+      authDomain: "eic-billing-software-55635.firebaseapp.com",
+      projectId: "eic-billing-software-55635",
+      storageBucket: "eic-billing-software-55635.firebasestorage.app",
+      messagingSenderId: "376103136888",
+      appId: "1:376103136888:web:ae1ab4d7195037a529478d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const nameEl = document.getElementById("name");
+    const categoryEl = document.getElementById("category");
+    const rateEl = document.getElementById("rate");
+    const uomEl = document.getElementById("uom");
+    const gstEl = document.getElementById("gst");
+    const activeEl = document.getElementById("active");
+    const msgEl = document.getElementById("msg");
+    const listEl = document.getElementById("itemList");
+    const searchEl = document.getElementById("search");
+
+    let items = [];
+
+    async function loadItems() {
+      listEl.innerHTML = "";
+      items = [];
+      const snapshot = await getDocs(collection(db, "items"));
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        items.push({ id: doc.id, ...data });
+        renderItem(data);
+      });
+    }
+
+    function renderItem(item) {
+      if (!item.active) return;
+
+      const li = document.createElement("li");
+      li.textContent =
+        `${item.name} | ${item.category || "-"} | ₹${item.rate} / ${item.uom} | GST ${item.gst}%`;
+
+      listEl.appendChild(li);
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", async () => {
+      if (!nameEl.value || !rateEl.value || !uomEl.value) {
+        msgEl.innerText = "❌ Name, Rate and UOM required";
+        return;
+      }
+
+      await addDoc(collection(db, "items"), {
+        name: nameEl.value,
+        category: categoryEl.value,
+        rate: Number(rateEl.value),
+        uom: uomEl.value,
+        gst: Number(gstEl.value || 0),
+        active: activeEl.checked,
+        createdAt: new Date()
+      });
+
+      msgEl.innerText = "✅ Item saved";
+
+      nameEl.value =
+        categoryEl.value =
+        rateEl.value =
+        uomEl.value =
+        gstEl.value = "";
+
+      activeEl.checked = true;
+
+      loadItems();
+    });
+
+    searchEl.addEventListener("input", () => {
+      const q = searchEl.value.toLowerCase().trim();
+      listEl.innerHTML = "";
+
+      items
+        .filter(i =>
+          (i.name && i.name.toLowerCase().includes(q)) ||
+          (i.category && i.category.toLowerCase().includes(q)) ||
+          (i.uom && i.uom.toLowerCase().includes(q)) ||
+          (String(i.gst).includes(q))
+        )
+        .forEach(renderItem);
+    });
+
+    loadItems();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Node / Firebase
+node_modules/
+.firebase/
+npm-debug.log*
+
+# Env / secrets
+.env
+
+# OS / editor
+.vscode/
+.idea/

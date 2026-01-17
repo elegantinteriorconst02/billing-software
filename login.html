@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  margin:0;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:Arial, sans-serif;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+}
+
+.card{
+  background:#fff;
+  padding:30px;
+  width:320px;
+  border-radius:16px;
+  box-shadow:0 20px 40px rgba(0,0,0,.2);
+  text-align:center;
+}
+
+h2{
+  margin:0 0 10px;
+}
+
+p{
+  color:#666;
+  font-size:14px;
+  margin-bottom:20px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  font-size:15px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+  background:#2d6cdf;
+  color:#fff;
+}
+
+button:hover{
+  background:#1f4fd8;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Billing App</h2>
+  <p>Sign in to continue</p>
+  <button onclick="login()">🔐 Sign in with Google</button>
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+/* 🔥 FIREBASE CONFIG (replace with your keys) */
+const firebaseConfig = {
+  apiKey: "PASTE_HERE",
+  authDomain: "PASTE_HERE",
+  projectId: "PASTE_HERE",
+  appId: "PASTE_HERE"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+/* 🔐 GOOGLE LOGIN */
+function login(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(res=>{
+      const user = res.user;
+      localStorage.setItem("user", JSON.stringify({
+        uid: user.uid,
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL
+      }));
+      location.href = "dashboard.html";
+    })
+    .catch(err=>{
+      alert(err.message);
+    });
+}
+
+/* 🔁 AUTO REDIRECT IF LOGGED IN */
+if(localStorage.getItem("user")){
+  location.href = "dashboard.html";
+}
+</script>
+
+</body>
+</html>
