@@ -107,3 +107,12 @@ body.menu-open #sidebar{transform:translateX(0);}
 @media(max-width:900px){
   #sidebar{transform:translateX(-220px);}
 }
+#sidebar a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#sidebar a .activeDot {
+  margin-left: auto;
+}
