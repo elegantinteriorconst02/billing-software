@@ -25,3 +25,10 @@ function initMenu(){
   /* IMPORTANT: reset state on load */
   document.body.classList.remove("menu-open");
 }
+function logout(){
+  if(confirm("Are you sure you want to logout?")){
+    localStorage.removeItem("user");
+    location.href = "login.html";
+  }
+}
+
