@@ -4,203 +4,887 @@
 <meta charset="UTF-8">
 <title>Billing / Quotation</title>
 
-<link rel="stylesheet" href="assets/menu.css">
 
-<style>
-body{font-family:Arial;}
+
+
+
+<style> 
+body{font-family:Arial;padding:20px}
 h2{margin-bottom:6px}
+
 hr{margin:12px 0}
+
 table{border-collapse:collapse;width:100%}
 
-/* PRINT */
-#printTitle{display:none;}
-@media print{
-  #printTitle{display:block;text-align:center;font-size:18px;font-weight:bold}
-  .actions,.controls,button{display:none!important;}
-  table{font-size:12px}
+/* ===== PRINT MODE FIX ===== */
+/* screen */
+
+#printTitle{
+  display:none;
 }
 
-th,td{border:1px solid #888;padding:6px;font-size:13px}
+/* print only */
+@media print {
+  #printTitle{
+    display:block;
+    text-align:center;
+    font-size:18px;
+    margin-bottom:10px;
+    font-weight:bold;
+  }
+
+
+
+  .actions,
+  .controls,
+  #settingsBox,
+  button{
+    display:none !important;
+  }
+
+  table{font-size:12px}
+  #companyHeader{text-align:center}
+}
+
+th,td{border:1px solid #888;padding:6px;font-size:13px;vertical-align:top}
 th{background:#eee;text-align:center}
 
-input,select,textarea{font-size:13px;padding:4px}
-textarea{resize:none;overflow:hidden}
+input,select,textarea{
+  box-sizing:border-box;
+  font-size:13px;
+  border:1px solid #999;
+  padding:4px;
+}
+
+textarea{
+  resize:none;
+  overflow:hidden;
+  min-height:26px;
+}
+
+.auto-width{min-width:60px}
+.desc input{ width: 300px; min-width:200px }
+.size input{width: 150px}
+.hsn input{ width:100px; min-width:80px; text-align:center;}
+.uom input{ width:50px; min-width:45px }
+.rate{width:100px; min-width:60px}
+.qty,.discPct{width:70px} 
+
+.taxable,.net{text-align:right;min-width:90px}
+
+button{cursor:pointer}
+
+.controls label{margin-right:12px}
+.summary{margin-top:15px;font-size:15px}
+.summary b{font-size:17px}
+.hide{display:none}
 
 .flex{display:flex;gap:10px;flex-wrap:wrap}
 .block{border:1px solid #aaa;padding:8px;min-width:280px;flex:1}
-.hide{display:none}
-.summary{margin-top:15px}
-.sl{width:40px;text-align:center;font-weight:bold}
+
+.actions button{margin-right:10px}
+
+/* ✅ SL COLUMN */
+.sl{
+  width:40px;
+  text-align:center;
+  font-weight:bold;
+}
+
+
+
 </style>
+<link rel="stylesheet" href="assets/menu.css">
+
 
 <script>
 if(!localStorage.getItem("user")){
-  location.href="login.html";
+  location.href = "login.html";
 }
 </script>
 </head>
 
-<body>
 
-<!-- MENU -->
+<body>
 <div id="menuContainer"></div>
 
-<!-- MAIN -->
-<div class="main">
 
-<h2 id="printTitle">Billing / Quotation</h2>
 
-<!-- COMPANY HEADER -->
+
+<h2 id="printTitle">Billing / Quotation</h2>  
+
 <div id="companyHeader" style="text-align:center;margin-bottom:15px">
   <img id="logoImg" style="max-height:140px;display:block;margin:auto">
   <h2 id="companyName"></h2>
   <div id="companyAddr"></div>
-  <div id="companyContact"></div>
+  <div id="companyContact"></div> 
   <div id="companyTax"></div>
 </div>
 
-<!-- DOC INFO -->
+
+
+
 <div class="flex">
-  <div>
-    <b>Document Type:</b>
-    <select id="docType">
-      <option>TAX-INVOICE</option>
-      <option>Quotation</option>
-      <option>Proforma Invoice</option>
-    </select>
-  </div>
+<div>
+<b>Document Type:</b>
+<select id="docType">
+<option>TAX-INVOICE</option>
+<option>Quotation</option>
+<option>Proforma Invoice</option>
+</select>
+</div>
 
-  <div><b>No:</b><input id="docNo"></div>
-  <div><b>Date:</b><input type="date" id="docDate"></div>
+<div>
+<b>No:</b>
+<input id="docNo" class="auto-width">
+</div>
 
-  <div>
-    <b>Tax Type:</b>
-    <select id="taxType">
-      <option value="intra">CGST + SGST</option>
-      <option value="inter">IGST</option>
-    </select>
-  </div>
+<div>
+<b>Date:</b>
+<input type="date" id="docDate">
+</div>
+
+<div>
+<b>Tax Type:</b>
+<select id="taxType">
+  <option value="intra">CGST + SGST</option>
+  <option value="inter">IGST</option>
+</select>
+</div>
 </div>
 
 <hr>
 
-<!-- BILL / SHIP -->
+<div>
+  <b>Invoice Copy:</b>
+  <select id="copyType">
+    <option value="original">Original (Buyer’s Copy)</option>
+    <option value="seller">Seller’s Copy</option>
+    <option value="duplicate">Duplicate</option>
+    <option value="triplicate">Triplicate</option>
+  </select>
+</div>
+
+
+
+
 <div class="flex">
 <div class="block">
 <b>Bill To</b><br>
-<input list="clientList" id="billName"><br>
-<textarea id="billAddr" oninput="autoResize(this)"></textarea><br>
-<input id="billMob"><br>
-<input id="billEmail"><br>
+<input list="clientList" id="billName" placeholder="Client Name"><br>
+<textarea id="billAddr" placeholder="Address" oninput="autoResize(this)"></textarea><br>
+<input id="billMob" placeholder="Mobile (optional)"><br>
+<input id="billMob2" placeholder="Alt Mobile (optional)"><br>
+<input id="billEmail" placeholder="Email (optional)"><br>
+<div class="flex">
+<input id="billPin" placeholder="PIN" class="auto-width">
+<input id="billState" placeholder="State" class="auto-width">
+<input id="billGst" placeholder="GSTIN" class="auto-width">
+</div>
 </div>
 
 <div class="block">
-<b>Ship To</b><br>
-<input id="shipName"><br>
-<textarea id="shipAddr" oninput="autoResize(this)"></textarea>
+<b>
+Ship To
+<label style="font-weight:normal;font-size:12px">
+<input type="checkbox" id="sameAsBill" onchange="copyBillToShip()"> Same as Bill To
+</label>
+</b><br>
+<input id="shipName" placeholder="Ship Name"><br>
+<textarea id="shipAddr" placeholder="Address" oninput="autoResize(this)"></textarea><br>
+<input id="shipPin" placeholder="PIN" class="auto-width">
+<input id="shipState" placeholder="State" class="auto-width">
 </div>
 </div>
 
 <hr>
 
-<!-- TABLE -->
+<div class="flex">
+<div>
+
+<!-- Reference -->
+<div>
+  <b>Reference No:</b>
+  <input id="refNo" class="auto-width">
+  <b>Reference Date:</b>
+  <input id="refDate" type="date">
+</div>
+
+<!-- E-Way Bill -->
+<div>
+  <b>E-Way Bill No:</b>
+  <input id="ewayNo" class="auto-width">
+  <b>E-Way Bill Date:</b>
+  <input id="ewayDate" type="date">
+</div>
+
+<!-- Order -->
+<div>
+  <b>Order No:</b>
+  <input id="orderNo" class="auto-width">
+  <b>Order Date:</b>
+  <input id="orderDate" type="date">
+</div>
+
+<!-- Challan -->
+<div>
+  <b>Challan No:</b>
+  <input id="challanNo" class="auto-width">
+  <b>Challan Date:</b>
+  <input id="challanDate" type="date">
+</div>
+
+<hr>
+
+<!-- COLUMN CONTROLS -->
+<div class="controls">
+<b>Columns:</b>
+<label><input type="checkbox" checked onchange="toggleCol('size')"> Size</label>
+<label><input type="checkbox" checked onchange="toggleCol('uom')"> UOM</label>
+<label><input type="checkbox" checked onchange="toggleCol('hsn')"> HSN/SAC</label>
+<label><input type="checkbox" checked onchange="toggleCol('disc')"> Disc %</label>
+</div>
+
+<br>
+
+<!-- ITEM TABLE (UNCHANGED CORE LOGIC) -->
 <table>
 <thead>
 <tr>
-<th>SL</th><th>Desc</th><th>Qty</th><th>Rate</th><th>Taxable</th><th>GST%</th><th>Net</th><th>X</th>
+  <th rowspan="2">SL</th>
+  <th rowspan="2">Desc</th>
+  <th rowspan="2" class="size">Size</th>
+  <th rowspan="2" class="uom">UOM</th>
+  <th rowspan="2" class="hsn">HSN/SAC</th>
+  <th rowspan="2">Qty</th>
+  <th rowspan="2">Rate ₹</th>
+  <th rowspan="2" class="disc">Disc %</th>
+  <th rowspan="2">Taxable ₹</th>
+  <th rowspan="2">GST %</th>
+
+  <th colspan="2" class="igst">IGST</th>
+  <th colspan="2" class="cgst">CGST</th>
+  <th colspan="2" class="sgst">SGST</th>
+
+  <th rowspan="2">Net ₹</th>
+  <th rowspan="2">X</th>
+</tr>
+<tr>
+  <th class="igst">%</th>
+  <th class="igst">Amt</th>
+  <th class="cgst">%</th>
+  <th class="cgst">Amt</th>
+  <th class="sgst">%</th>
+  <th class="sgst">Amt</th>
 </tr>
 </thead>
+
 <tbody id="tbody"></tbody>
 </table>
 
 <br>
 <button onclick="addRow()">+ Add Row</button>
 
+
+
 <!-- SUMMARY -->
 <div class="summary">
+Taxable: ₹ <span id="tTax">0.00</span><br>
+CGST: ₹ <span id="tCgst">0.00</span><br>
+SGST: ₹ <span id="tSgst">0.00</span><br>
+IGST: ₹ <span id="tIgst">0.00</span><br>
+
+<b>Total GST: ₹ <span id="tGst">0.00</span></b><br>
+Round Off: ₹ <span id="roundOff">0.00</span><br>
 <b>Grand Total: ₹ <span id="grand">0.00</span></b><br>
 <b>In Words:</b> <span id="inWords"></span>
+<label style="display:block;margin-top:8px">
+
+<!-- ADVANCE -->
+<label>
+  <input type="checkbox" id="advCheck" onchange="toggleAdvance()">
+  Advance Received
+</label><br>
+₹ <input
+  type="number"
+  id="advanceAmt"
+  value="0"
+  disabled
+  oninput="calcDue()"
+><br><br>
+
+<!-- DUE -->
+<label>
+  <input type="checkbox" id="dueCheck" checked disabled>
+  Amount Due
+</label><br>
+₹ <input
+  type="number"
+  id="dueAmt"
+  value="0"
+  readonly
+><br><br>
+  
+  <input type="checkbox" id="reverseCharge">
+  GST Payable on Reverse Charge
+</label>
+
 </div>
 
 <hr>
 
 <div class="actions">
   <button onclick="openPrint()">🖨 Print</button>
+  <button onclick="openPrint()">📄 Print PDF</button>
+  <button onclick="openPrint()">✉ Email</button>
+  <button onclick="openPrint()">🟢 WhatsApp</button>
+</div>
+<hr>
+
+
+<!-- REMARKS -->
+<div class="block">
+  <b>Remarks</b><br>
+  <textarea id="remarks"></textarea>
 </div>
 
-</div>
-<!-- END MAIN -->
+<!-- TERMS + STAMP + SIGN -->
+<div class="flex">
 
-<!-- DATA -->
+  <div class="block">
+    <b>Terms & Conditions</b>
+    <div id="termsView" style="white-space:pre-line"></div>
+  </div>
+
+  <div class="block" style="text-align:center">
+    <img id="stampImg" style="max-height:120px;display:none"><br>
+    <small>Stamp</small>
+    <br><br>
+    <img id="signImg" style="max-height:150px;display:none"><br>
+    <small>Certified that the particulars given above are true and correct</small>
+    <br>
+    <small><b>For, ELEGANT INTERIOR & CONSTRUCTION</b></small>
+    <br>
+    <small><b>Authorised Signatory</b></small>
+    <br><br><br><br>
+  </div>
+
+</div>
+
+
+<!-- CLIENT MASTER -->
 <datalist id="clientList"></datalist>
 
-<!-- SCRIPTS (UNCHANGED LOGIC) -->
+<!-- UOM MASTER -->
+<datalist id="uomList">
+<option>PCS</option><option>NOS</option><option>SET</option><option>PAIR</option>
+<option>KG</option><option>G</option><option>MG</option><option>QUINTAL</option><option>TONNE</option>
+<option>LITRE</option><option>ML</option><option>KL</option><option>GALLON</option>
+<option>METRE</option><option>CM</option><option>MM</option><option>INCH</option><option>FOOT</option>
+<option>SQFT</option><option>SQYD</option><option>SQM</option>
+<option>BOX</option><option>CARTON</option><option>BUNDLE</option><option>PACK</option><option>DOZEN</option>
+</datalist>
+
+<script>
+/* ===== HELPERS ===== */
+function autoResize(el){el.style.height="auto";el.style.height=el.scrollHeight+"px";}
+function toggleCol(cls){document.querySelectorAll("."+cls).forEach(e=>e.classList.toggle("hide"));}
+
+function copyBillToShip(){
+if(!sameAsBill.checked) return;
+shipName.value=billName.value;
+shipAddr.value=billAddr.value;
+shipPin.value=billPin.value;
+shipState.value=billState.value;
+autoResize(shipAddr);
+}
+
+/* ===== CLIENT MASTER (AUTO SUGGEST) ===== */
+const clients=JSON.parse(localStorage.getItem("clients")||"[]");
+const clientList=document.getElementById("clientList");
+clients.forEach(c=>{
+let o=document.createElement("option");
+o.value=c.name; clientList.appendChild(o);
+});
+
+billName.onchange=()=>{
+let c=clients.find(x=>x.name===billName.value);
+if(c){
+billAddr.value=c.addr; autoResize(billAddr);
+billMob.value=c.mob;
+billEmail.value=c.email;
+billPin.value=c.pin;
+billState.value=c.state;
+billGst.value=c.gst;
+}
+};
+
+  window.addEventListener("beforeunload",()=>{
+  if(billName.value){
+  clients.push({
+  name:billName.value,
+  addr:billAddr.value,
+  mob:billMob.value,
+  email:billEmail.value,
+  pin:billPin.value,
+  state:billState.value,
+  gst:billGst.value
+  });
+  localStorage.setItem("clients",JSON.stringify(clients));
+  }
+  
+  });
+  </script>
+
+<!-- ITEM + GST ENGINE (UNCHANGED CORE, WORKING) -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  // 🔢 Auto Invoice / Quotation Number (editable)
+(function autoDocNumber(){
+  if(docNo.value) return; // already typed manually → do nothing
+
+  const c = JSON.parse(localStorage.getItem("company") || "{}");
+  if(!c) return;
+
+  // track last used numbers
+  const counters = JSON.parse(localStorage.getItem("docCounters") || "{}");
+
+  let series = "";
+  let num = 1;
+
+  if(docType.value === "TAX-INVOICE"){
+    series = c.invSeries || "";
+    num = counters.inv ?? c.invStart ?? 1;
+    docNo.value = series + num;
+    counters.inv = num + 1;
+  }
+
+  if(docType.value === "Quotation"){
+    series = c.qtSeries || "";
+    num = counters.qt ?? c.qtStart ?? 1;
+    docNo.value = series + num;
+    counters.qt = num + 1;
+  }
+
+  localStorage.setItem("docCounters", JSON.stringify(counters));
+})();
+
+
+  // 📅 Auto set today's date (India) – editable
+if(!docDate.value){
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  docDate.value = `${yyyy}-${mm}-${dd}`;
+}
+
+docType.addEventListener("change", () => {
+  docNo.value = "";
+  autoDocNumber?.();
+});
+
+
+  const tbody   = document.getElementById("tbody");
+
+const tTaxEl   = document.getElementById("tTax");
+const tCgst    = document.getElementById("tCgst");
+const tSgst    = document.getElementById("tSgst");
+const tIgst    = document.getElementById("tIgst");
+const tGst     = document.getElementById("tGst");
+const roundOff = document.getElementById("roundOff");
+const grand    = document.getElementById("grand");
+const inWords  = document.getElementById("inWords");
+
+  const taxType = document.getElementById("taxType");
+
+  function gstSelect(){
+    return `<select class="gstRate">
+      <option value="0">0%</option>
+      <option value="5">5%</option>
+      <option value="12">12%</option>
+      <option value="18" selected>18%</option>
+      <option value="28">28%</option>
+    </select>`;
+  }
+
+  window.addRow = function(){
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+    <td class="sl"></td>
+      <td><textarea oninput="autoResize(this)"></textarea></td>
+      <td class="size"><input></td>
+      <td class="uom"><input list="uomList"></td>
+      <td class="hsn"><input></td>
+      <td><input type="number" class="qty" value="1"></td>
+      <td><input type="number" class="rate" value="0"></td>
+      <td class="disc"><input type="number" class="discPct" value="0"></td>
+      <td class="taxable">0.00</td>
+      <td>${gstSelect()}</td>
+
+      <td class="igst pct">0</td>
+      <td class="igst amt">0.00</td>
+
+      <td class="cgst pct">0</td>
+      <td class="cgst amt">0.00</td>
+
+      <td class="sgst pct">0</td>
+      <td class="sgst amt">0.00</td>
+
+      <td class="net">0.00</td>
+      <td><button onclick="this.closest('tr').remove();calc()">✕</button></td>
+    `;
+    tr.querySelectorAll("input,select").forEach(e => e.oninput = calc);
+    tbody.appendChild(tr);
+    updateSL();
+    calc();
+  }
+  /* ===== STEP-C: SL updater (PASTE HERE) ===== */
+function updateSL(){
+  document.querySelectorAll("#tbody tr").forEach((tr, i) => {
+    const slCell = tr.querySelector(".sl");
+    if(slCell) slCell.innerText = i + 1;
+  });
+}
+
+
+/* ===== calc function starts ===== */
+  window.calc = function(){
+    let tTax = 0, cgst = 0, sgst = 0, igst = 0;
+
+    [...tbody.children].forEach(tr => {
+      const qty     = +tr.querySelector(".qty").value || 0;
+      const rate    = +tr.querySelector(".rate").value || 0;
+      const disc    = +tr.querySelector(".discPct").value || 0;
+      const gstRate = +tr.querySelector(".gstRate").value || 0;
+
+      const base    = qty * rate;
+      const taxable = base - base * disc / 100;
+      const gstAmt  = taxable * gstRate / 100;
+
+      tr.querySelector(".taxable").innerText = taxable.toFixed(2);
+
+      if(taxType.value === "intra"){
+        const hPct = gstRate / 2;
+        const hAmt = gstAmt / 2;
+
+        tr.querySelector(".cgst.pct").innerText = hPct;
+        tr.querySelector(".sgst.pct").innerText = hPct;
+        tr.querySelector(".cgst.amt").innerText = hAmt.toFixed(2);
+        tr.querySelector(".sgst.amt").innerText = hAmt.toFixed(2);
+        tr.querySelector(".igst.pct").innerText = "0";
+        tr.querySelector(".igst.amt").innerText = "0.00";
+
+        cgst += hAmt;
+        sgst += hAmt;
+      } else {
+        tr.querySelector(".igst.pct").innerText = gstRate;
+        tr.querySelector(".igst.amt").innerText = gstAmt.toFixed(2);
+        tr.querySelector(".cgst.amt").innerText = "0.00";
+        tr.querySelector(".sgst.amt").innerText = "0.00";
+
+        igst += gstAmt;
+      }
+
+      tr.querySelector(".net").innerText =
+        (taxable + gstAmt).toFixed(2);
+
+      tTax += taxable;
+    });
+const totalGST = cgst + sgst + igst;
+const gross    = tTax + totalGST;
+const rounded  = Math.round(gross);
+
+tTaxEl.innerText   = tTax.toFixed(2);
+tCgst.innerText   = cgst.toFixed(2);
+tSgst.innerText   = sgst.toFixed(2);
+tIgst.innerText   = igst.toFixed(2);
+tGst.innerText    = totalGST.toFixed(2);
+roundOff.innerText= (rounded - gross).toFixed(2);
+grand.innerText   = rounded.toFixed(2);
+inWords.innerText = numberToWords(rounded);
+calcDue();
+
+    tTaxEl.innerText = tTax.toFixed(2);
+    tCgst.innerText = cgst.toFixed(2);
+    tSgst.innerText = sgst.toFixed(2);
+    tIgst.innerText = igst.toFixed(2);
+    tGst.innerText  = (cgst + sgst + igst).toFixed(2);
+  };
+
+  function updateView(){
+    const intra = taxType.value === "intra";
+    document.querySelectorAll(".cgst,.sgst")
+      .forEach(e => e.style.display = intra ? "" : "none");
+    document.querySelectorAll(".igst")
+      .forEach(e => e.style.display = intra ? "none" : "");
+  }
+
+  taxType.onchange = () => { updateView(); calc(); };
+
+  addRow();
+  updateView();
+  calc();
+
+
+});
+</script>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  
+
+
+  /* ===== DOM REFS (safe) ===== */
+  const companyName   = document.getElementById("companyName");
+  const companyAddr   = document.getElementById("companyAddr");
+  const companyContact= document.getElementById("companyContact");
+  const companyTax    = document.getElementById("companyTax");
+  const logoImg       = document.getElementById("logoImg");
+
+  const billNameEl    = document.getElementById("billName");
+  const billAddrEl    = document.getElementById("billAddr");
+  const shipNameEl    = document.getElementById("shipName");
+  const shipAddrEl    = document.getElementById("shipAddr");
+
+  const tTaxEl  = document.getElementById("tTax");
+  const tCgstEl = document.getElementById("tCgst");
+  const tSgstEl = document.getElementById("tSgst");
+  const tIgstEl = document.getElementById("tIgst");
+  const grandEl = document.getElementById("grand");
+
+  
+
+ /* ===== RENDER COMPANY HEADER ===== */
+function renderCompany(){
+  const c = JSON.parse(localStorage.getItem("company") || "{}");
+
+  companyName && (companyName.innerText = c.name || "");
+  companyAddr && (companyAddr.innerText = c.addr || "");
+  companyContact && (
+    companyContact.innerText =
+      [c.phone, c.email].filter(Boolean).join(" | ")
+  );
+  companyTax && (
+    companyTax.innerText =
+      [c.gst && "GST: "+c.gst,
+       c.pan && "PAN: "+c.pan,
+       c.cin && "CIN: "+c.cin
+      ].filter(Boolean).join(" | ")
+  );
+
+  const logo = localStorage.getItem("logo");
+  if(logo && logoImg){
+    logoImg.src = logo;
+    logoImg.style.display = "block";
+  }else if(logoImg){
+    logoImg.style.display = "none";
+  }
+}
+
+/* ===== EXTRA FOOTER BLOCKS ===== */
+function renderExtras(){
+  const c = JSON.parse(localStorage.getItem("company") || "{}");
+
+  // Terms
+  if(termsView){
+    termsView.innerText = c.terms || "";
+  }
+
+  // Stamp
+  const stamp = localStorage.getItem("stamp");
+  if(stamp && stampImg){
+    stampImg.src = stamp;
+    stampImg.style.display = "block";
+  }
+
+  // Signature
+  const sign = localStorage.getItem("sign");
+  if(sign && signImg){
+    signImg.src = sign;
+    signImg.style.display = "block";
+  }
+}
+
+/* render once on load */
+renderCompany();
+renderExtras();
+
+});
+</script>
+
+<script>
+/* ===== PRINT HANDLER (MAIN) ===== */
+function openPrint(){
+
+  const rows = [];
+  document.querySelectorAll("#tbody tr").forEach(tr=>{
+    rows.push({
+      desc: tr.querySelector("textarea")?.value ?? "",
+      size: tr.querySelector(".size input")?.value ?? "",
+      uom: tr.querySelector(".uom input")?.value ?? "",
+      hsn: tr.querySelector(".hsn input")?.value ?? "",
+      qty: tr.querySelector(".qty")?.value ?? "0",
+      rate: tr.querySelector(".rate")?.value ?? "0",
+      disc: tr.querySelector(".discPct")?.value ?? "0",
+      taxable: tr.querySelector(".taxable")?.innerText ?? "0.00",
+      gstRate: tr.querySelector(".gstRate")?.value ?? "0",
+      cgst: tr.querySelector(".cgst.amt")?.innerText ?? "0.00",
+      sgst: tr.querySelector(".sgst.amt")?.innerText ?? "0.00",
+      igst: tr.querySelector(".igst.amt")?.innerText ?? "0.00",
+      net: tr.querySelector(".net")?.innerText ?? "0.00"
+    });
+  });
+
+  const data = {
+    docType: docType.value,
+    docNo: docNo.value,
+    docDate: docDate.value,
+
+    copyType: copyType.value,
+
+    refNo: refNo.value,
+    refDate: refDate.value,
+
+    orderNo: orderNo.value,
+    orderDate: orderDate.value,
+
+    challanNo: challanNo.value,
+    challanDate: challanDate.value,
+
+    ewayNo: ewayNo.value,
+    ewayDate: ewayDate.value,
+
+    company: JSON.parse(localStorage.getItem("company") || "{}"),
+    logo: localStorage.getItem("logo"),
+
+    bill: {
+      name: billName.value,
+      addr: billAddr.value,
+      pin: billPin.value,
+      state: billState.value,
+      mob: billMob.value,
+      mob2: billMob2.value,
+      email: billEmail.value,
+      gst: billGst.value
+    },
+
+    ship: {
+      name: shipName.value,
+      addr: shipAddr.value,
+      pin: shipPin.value,
+      state: shipState.value
+    },
+
+totals:{
+  taxable: tTax.innerText,
+  cgst: tCgst.innerText,
+  sgst: tSgst.innerText,
+  igst: tIgst.innerText,
+  gst: tGst.innerText,
+  roundOff: roundOff.innerText,
+  grand: grand.innerText,
+  inWords: inWords.innerText
+},
+advance: advCheck.checked ? advanceAmt.value : 0,
+
+  };
+
+  localStorage.setItem("printData", JSON.stringify(data));
+  window.open("invoice-print.html","_blank");
+
+  saveBill({
+    type: docType.value.toLowerCase(),
+    number: docNo.value,
+    date: docDate.value,
+    clientName: billName.value,
+    gst: billGst.value,
+    total: grand.innerText,
+    data
+  });
+
+} 
+
+</script>
+
+<script>
+/* ===== GLOBAL ADVANCE / DUE ===== */
+function toggleAdvance(){
+  if(advCheck.checked){
+    advanceAmt.disabled = false;
+  }else{
+    advanceAmt.value = 0;
+    advanceAmt.disabled = true;
+  }
+  calcDue();
+}
+
+function calcDue(){
+  const grandTotal = Number(grand.innerText || 0);
+  const advance    = advCheck.checked ? Number(advanceAmt.value || 0) : 0;
+
+  let due = grandTotal - advance;
+  if(due < 0) due = 0;
+
+  dueAmt.value = due.toFixed(2);
+}
+</script>
+
+
+
+
+<script>
+/* ===== NUMBER TO WORDS (INDIAN) ===== */
+function numberToWords(num){
+  if(num===0) return "Rupees Zero Only";
+
+  const o=["","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten",
+  "Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen"];
+  const t=["","","Twenty","Thirty","Forty","Fifty","Sixty","Seventy","Eighty","Ninety"];
+
+  const two = n => n<20 ? o[n] : t[Math.floor(n/10)]+" "+o[n%10];
+  const three = n => (n>=100 ? o[Math.floor(n/100)]+" Hundred " : "") + (n%100 ? two(n%100) : "");
+
+  let r="", c=Math.floor(num/10000000); num%=10000000;
+  let l=Math.floor(num/100000); num%=100000;
+  let th=Math.floor(num/1000); num%=1000;
+
+  if(c) r+=three(c)+" Crore ";
+  if(l) r+=three(l)+" Lakh ";
+  if(th) r+=three(th)+" Thousand ";
+  if(num) r+=three(num);
+
+  return " Rupees "+r.trim()+" Only";
+}
+</script>
+
+
+<!-- ✅ ADD THESE TWO LINES HERE -->
 <script src="data/storage.js"></script>
 <script src="data/bills.js"></script>
 
-<script>
-function autoResize(el){
-  el.style.height="auto";
-  el.style.height=el.scrollHeight+"px";
-}
 
-function addRow(){
-  const tr=document.createElement("tr");
-  tr.innerHTML=`
-    <td class="sl"></td>
-    <td><textarea></textarea></td>
-    <td><input type="number" value="1"></td>
-    <td><input type="number" value="0"></td>
-    <td class="taxable">0</td>
-    <td><input type="number" value="18"></td>
-    <td class="net">0</td>
-    <td><button onclick="this.closest('tr').remove();calc()">✕</button></td>
-  `;
-  tr.querySelectorAll("input,textarea").forEach(e=>e.oninput=calc);
-  tbody.appendChild(tr);
-  updateSL();
-  calc();
-}
 
-function updateSL(){
-  document.querySelectorAll("#tbody tr").forEach((tr,i)=>{
-    tr.querySelector(".sl").innerText=i+1;
-  });
-}
 
-function calc(){
-  let total=0;
-  document.querySelectorAll("#tbody tr").forEach(tr=>{
-    const qty=+tr.children[2].querySelector("input").value||0;
-    const rate=+tr.children[3].querySelector("input").value||0;
-    const gst=+tr.children[5].querySelector("input").value||0;
-    const base=qty*rate;
-    const net=base+(base*gst/100);
-    tr.querySelector(".taxable").innerText=base.toFixed(2);
-    tr.querySelector(".net").innerText=net.toFixed(2);
-    total+=net;
-  });
-  grand.innerText=Math.round(total);
-  inWords.innerText=numberToWords(Math.round(total));
-}
-
-function numberToWords(num){
-  return "Rupees "+num+" Only";
-}
-
-addRow();
-</script>
-
-<!-- MENU LOAD -->
 <script src="shared/menu.js"></script>
 <script>
 fetch("shared/menu.html")
-.then(r=>r.text())
-.then(html=>{
-  menuContainer.innerHTML=html;
-  initMenu();
-});
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
 </script>
+
+
+
+<head>
 
 </body>
 </html>
