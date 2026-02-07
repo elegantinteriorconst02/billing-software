@@ -1,47 +1,47 @@
-// 🔑 Base path detect
+// 🔑 Base path detect (GitHub Pages + Local)
 const BASE_PATH = location.pathname.includes("/billing-software/")
   ? "/billing-software/"
   : "/";
 
-// ☰ Menu toggle
-function toggleMenu(force) {
-  if (force === false) {
+function toggleMenu(force){
+  if(force === false){
     document.body.classList.remove("menu-open");
-  } else {
+  }else{
     document.body.classList.toggle("menu-open");
   }
 }
 
-// 🚀 Init menu
-function initMenu() {
+function initMenu(){
   const btn = document.getElementById("menuBtn");
   const overlay = document.getElementById("overlay");
 
-  btn && btn.addEventListener("click", () => toggleMenu());
-  overlay && overlay.addEventListener("click", () => toggleMenu(false));
+  btn && btn.addEventListener("click", ()=>toggleMenu());
+  overlay && overlay.addEventListener("click", ()=>toggleMenu(false));
 
-  // ✅ Sidebar navigation (MAIN FIX)
-  document.querySelectorAll("#sidebar a[data-go]").forEach(a => {
-    a.addEventListener("click", () => {
-      const page = a.getAttribute("data-go");
-      location.href = BASE_PATH + page;
+  // navigation handler
+  document.querySelectorAll("#sidebar a[data-go]").forEach(a=>{
+    a.addEventListener("click", ()=>{
+      const page = a.dataset.go;
+      if(page){
+        location.href = BASE_PATH + page;
+      }
     });
   });
 
-  // 🔓 Logout
-  const logoutBtn = document.getElementById("logoutBtn");
-  logoutBtn && logoutBtn.addEventListener("click", () => {
-    if (confirm("Are you sure you want to logout?")) {
-      localStorage.removeItem("user");
-      location.href = BASE_PATH + "login.html";
+  // active highlight
+  const page = location.pathname.split("/").pop();
+  document.querySelectorAll("#sidebar a[data-page]").forEach(a=>{
+    if(page && page.includes(a.dataset.page)){
+      a.classList.add("active");
     }
   });
 
-  // ✅ Active menu highlight
-  const currentPage = location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll("#sidebar a[data-page]").forEach(a => {
-    if (currentPage.startsWith(a.dataset.page)) {
-      a.classList.add("active");
+  // logout
+  const logoutBtn = document.getElementById("logoutBtn");
+  logoutBtn && logoutBtn.addEventListener("click", ()=>{
+    if(confirm("Are you sure you want to logout?")){
+      localStorage.removeItem("user");
+      location.href = BASE_PATH + "login.html";
     }
   });
 
