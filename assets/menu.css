@@ -1,4 +1,4 @@
-/* ===== RESET SAFE ===== */
+/* ===== RESET ===== */
 *{
   box-sizing:border-box;
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
@@ -15,6 +15,7 @@
   color:#fff;
   padding:16px 14px;
   z-index:1000;
+  transform:translateX(-200px);
   transition:transform .3s ease;
   box-shadow:4px 0 20px rgba(0,0,0,.35);
 }
@@ -23,12 +24,10 @@
 #sidebar h3{
   margin:6px 0 20px;
   font-size:18px;
-  font-weight:600;
   text-align:center;
-  letter-spacing:.4px;
 }
 
-/* ===== LINKS ===== */
+/* ===== MENU LINKS ===== */
 #sidebar a{
   display:flex;
   align-items:center;
@@ -39,29 +38,28 @@
   color:#cbd5e1;
   text-decoration:none;
   font-size:14px;
-  transition:all .25s ease;
+  cursor:pointer;
+  transition:.25s;
 }
 
-/* hover */
 #sidebar a:hover{
   background:rgba(255,255,255,.08);
   color:#fff;
   transform:translateX(4px);
 }
 
-/* ===== ACTIVE PAGE ===== */
 #sidebar a.active{
   background:linear-gradient(135deg,#2563eb,#3b82f6);
   color:#fff;
   font-weight:600;
-  box-shadow:0 8px 20px rgba(37,99,235,.5);
 }
 
-/* small dot */
+/* ACTIVE DOT */
 .activeDot{
   width:7px;
   height:7px;
   border-radius:50%;
+  margin-left:auto;
 }
 
 #sidebar a.active .activeDot{
@@ -82,37 +80,44 @@
   padding:8px 12px;
   border-radius:10px;
   cursor:pointer;
-  box-shadow:0 6px 16px rgba(37,99,235,.6);
 }
 
 /* ===== OVERLAY ===== */
 #overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.5);
+  background:rgba(0,0,0,.4);
   display:none;
+  z-index:999;
 }
 
-/* open states */
-body.menu-open #overlay{display:block;}
-body.menu-open #sidebar{transform:translateX(0);}
+/* ===== OPEN STATE ===== */
+body.menu-open #sidebar{
+  transform:translateX(0);
+}
+
+body.menu-open #overlay{
+  display:block;
+}
+
+/* ===== MAIN CONTENT PUSH ===== */
+.main{
+  margin-left:0;
+  transition:margin-left .3s ease;
+}
+
+body.menu-open .main{
+  margin-left:200px;
+}
 
 /* ===== DESKTOP ===== */
 @media(min-width:901px){
   #menuBtn,#overlay{display:none;}
-  body{margin-left:220px;}
+  #sidebar{transform:translateX(0);}
+  .main{margin-left:200px;}
 }
 
 /* ===== MOBILE ===== */
 @media(max-width:900px){
-  #sidebar{transform:translateX(-220px);}
-}
-#sidebar a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-#sidebar a .activeDot {
-  margin-left: auto;
+  body.menu-open .main{margin-left:0;}
 }
