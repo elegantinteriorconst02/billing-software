@@ -109,7 +109,9 @@ label{font-size:13px;font-weight:600;margin-bottom:4px;display:block}
 </head>
 
 <body>
+<div id="menuContainer"></div>
 
+  <div class="main">
 <div id="menuContainer"></div>
 
 <div class="container">
@@ -314,6 +316,14 @@ function saveFile(id,key){
  r.readAsDataURL(f);
 }
 </script>
-
+<script src="shared/menu.js"></script>
+  <script>
+    fetch("shared/menu.html")
+      .then(r=>r.text())
+      .then(html=>{
+        menuContainer.innerHTML = html;
+        initMenu();
+      });
+  </script>
 </body>
 </html>
