@@ -1,240 +1,304 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client Master</title>
-   
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Master</title>
 
-    <style>
-        body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 20px; background: #f4f7f6; }
-        h2 { border-bottom: 2px solid #4a90e2; padding-bottom: 10px; }
-        .container { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
-        
-        /* Form Styling */
-        .card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; font-size: 0.9em; margin-bottom: 4px; }
-        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        textarea { height: 60px; resize: vertical; }
-        
-        .btn-group { margin-top: 15px; display: flex; gap: 10px; }
-        button { cursor: pointer; padding: 10px 15px; border: none; border-radius: 4px; font-weight: bold; }
-        .btn-save { background: #28a745; color: white; flex: 2; }
-        .btn-reset { background: #6c757d; color: white; flex: 1; }
-        
-        /* Table Styling */
-        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
-        th { background: #4a90e2; color: white; }
-        tr:hover { background: #f9f9f9; }
-        
-        .actions button { padding: 4px 8px; font-size: 0.8em; margin-right: 5px; }
-        .btn-edit { background: #ffc107; color: #333; }
-        .btn-delete { background: #dc3545; color: white; }
-    </style>
+  <!-- MENU CSS -->
+  <link rel="stylesheet" href="../assets/menu.css">
 
-    <link rel="stylesheet" href="../assets/menu.css">
-    
+  <style>
+    body{
+      margin:0;
+      font-family:sans-serif;
+      background:#f4f7f6;
+    }
 
+    /* main content */
+    .main{
+      padding:20px;
+      max-width:1100px;
+    }
 
+    h2{
+      border-bottom:2px solid #4a90e2;
+      padding-bottom:10px;
+      margin-top:0;
+    }
+
+    .container{
+      display:grid;
+      grid-template-columns:350px 1fr;
+      gap:30px;
+    }
+
+    .card{
+      background:#fff;
+      padding:20px;
+      border-radius:8px;
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .form-group{ margin-bottom:12px; }
+    label{ font-weight:bold; font-size:0.9em; }
+    input, textarea{
+      width:100%;
+      padding:8px;
+      border:1px solid #ccc;
+      border-radius:4px;
+    }
+    textarea{ resize:vertical; height:60px; }
+
+    .btn-group{
+      display:flex;
+      gap:10px;
+      margin-top:15px;
+    }
+
+    button{
+      cursor:pointer;
+      padding:10px;
+      border:none;
+      border-radius:4px;
+      font-weight:bold;
+    }
+
+    .btn-save{ background:#28a745; color:#fff; flex:2; }
+    .btn-reset{ background:#6c757d; color:#fff; flex:1; }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+      border-radius:8px;
+      overflow:hidden;
+    }
+
+    th, td{
+      padding:12px;
+      border-bottom:1px solid #eee;
+    }
+
+    th{
+      background:#4a90e2;
+      color:#fff;
+      text-align:left;
+    }
+
+    tr:hover{ background:#f9f9f9; }
+
+    .actions button{
+      padding:4px 8px;
+      font-size:12px;
+      margin-right:5px;
+    }
+
+    .btn-edit{ background:#ffc107; }
+    .btn-delete{ background:#dc3545; color:#fff; }
+
+    #clientSearch{
+      width:100%;
+      padding:8px;
+      margin:15px 0;
+    }
+
+    @media(max-width:900px){
+      .container{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
+<!-- MENU LOAD -->
+<div id="menuContainer"></div>
 
-<div id="menu-holder"></div>
+<!-- PAGE CONTENT -->
+<div class="main">
 
-    <h2>Client Master</h2>
+  <h2>Client Master</h2>
 
-    <input
-  type="text"
-  id="clientSearch"
-  placeholder="Search by name / phone / gst / email / pin"
-  style="width:100%;padding:8px;margin:15px 0"
-/>
+  <input
+    type="text"
+    id="clientSearch"
+    placeholder="Search by name / phone / gst / email / pin"
+  />
 
+  <div class="container">
 
-    <div class="container">
-        <div class="card">
-            <form id="clientForm">
-                <input type="hidden" id="clientId">
-                
-                <div class="form-group">
-                    <label>Client Name *</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label>Mobile</label>
-                    <input type="text" id="mobile">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="email">
-                </div>
-                <div class="form-group">
-                    <label>GSTIN</label>
-                    <input type="text" id="gst">
-                </div>
-                <div class="form-group">
-                    <label>State</label>
-                    <input type="text" id="state">
-                </div>
-                <div class="form-group">
-                    <label>PIN Code</label>
-                    <input type="text" id="pin">
-                </div>
-                <div class="form-group">
-                    <label>Address</label>
-                    <textarea id="address"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea id="notes"></textarea>
-                </div>
+    <!-- FORM -->
+    <div class="card">
+      <form id="clientForm">
+        <input type="hidden" id="clientId">
 
-                <div class="btn-group">
-                    <button type="submit" class="btn-save" id="saveBtn">Save Client</button>
-                    <button type="button" class="btn-reset" onclick="resetForm()">Reset</button>
-                </div>
-            </form>
+        <div class="form-group">
+          <label>Client Name *</label>
+          <input type="text" id="name" required>
         </div>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Mobile</th>
-                        <th>GST</th>
-                        <th>State</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="clientTableBody">
-                    </tbody>
-            </table>
+        <div class="form-group">
+          <label>Mobile</label>
+          <input type="text" id="mobile">
         </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email">
+        </div>
+
+        <div class="form-group">
+          <label>GSTIN</label>
+          <input type="text" id="gst">
+        </div>
+
+        <div class="form-group">
+          <label>State</label>
+          <input type="text" id="state">
+        </div>
+
+        <div class="form-group">
+          <label>PIN Code</label>
+          <input type="text" id="pin">
+        </div>
+
+        <div class="form-group">
+          <label>Address</label>
+          <textarea id="address"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="notes"></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn-save" id="saveBtn">Save Client</button>
+          <button type="button" class="btn-reset" onclick="resetForm()">Reset</button>
+        </div>
+      </form>
     </div>
 
-    <script src="../data/client.js"></script>
-    <script>
-        const form = document.getElementById('clientForm');
-        const tableBody = document.getElementById('clientTableBody');
+    <!-- TABLE -->
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Mobile</th>
+            <th>GST</th>
+            <th>State</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="clientTableBody"></tbody>
+      </table>
+    </div>
 
-        // Initial Load
-        window.onload = refreshList;
+  </div>
+</div>
 
-        // Handle Form Submission (Save or Update)
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const clientData = {
-                id: document.getElementById('clientId').value,
-                name: document.getElementById('name').value,
-                mobile: document.getElementById('mobile').value,
-                email: document.getElementById('email').value,
-                gst: document.getElementById('gst').value,
-                state: document.getElementById('state').value,
-                pin: document.getElementById('pin').value,
-                address: document.getElementById('address').value,
-                notes: document.getElementById('notes').value
-            };
+<!-- DATA -->
+<script src="../data/client.js"></script>
+<script src="../data/recyclebin.js"></script>
 
-            if (clientData.id) {
-                updateClient(clientData);
-            } else {
-                saveClient(clientData);
-            }
+<!-- LOGIC -->
+<script>
+const form = document.getElementById("clientForm");
+const tableBody = document.getElementById("clientTableBody");
+const searchInput = document.getElementById("clientSearch");
 
-            resetForm();
-            refreshList();
-        });
+window.onload = refreshList;
 
-function refreshList() {
-  const q = (document.getElementById("clientSearch")?.value || "").toLowerCase();
+form.addEventListener("submit", e=>{
+  e.preventDefault();
 
-  const clients = getClients().filter(c =>
+  const client = {
+    id: clientId.value,
+    name: name.value,
+    mobile: mobile.value,
+    email: email.value,
+    gst: gst.value,
+    state: state.value,
+    pin: pin.value,
+    address: address.value,
+    notes: notes.value
+  };
+
+  client.id ? updateClient(client) : saveClient(client);
+  resetForm();
+  refreshList();
+});
+
+function refreshList(){
+  const q = (searchInput.value || "").toLowerCase();
+  tableBody.innerHTML = "";
+
+  getClients().filter(c =>
     c.name?.toLowerCase().includes(q) ||
     c.mobile?.includes(q) ||
     c.email?.toLowerCase().includes(q) ||
     c.gst?.toLowerCase().includes(q) ||
     c.pin?.includes(q)
-  );
-
-  tableBody.innerHTML = '';
-
-  clients.forEach(client => {
-    const row = `
+  ).forEach(c=>{
+    tableBody.innerHTML += `
       <tr>
-        <td><strong>${client.name}</strong></td>
-        <td>${client.mobile || ''}</td>
-        <td>${client.gst || '-'}</td>
-        <td>${client.state || ''}</td>
+        <td><b>${c.name}</b></td>
+        <td>${c.mobile||""}</td>
+        <td>${c.gst||"-"}</td>
+        <td>${c.state||""}</td>
         <td class="actions">
-          <button class="btn-edit" onclick="editEntry('${client.id}')">Edit</button>
-          <button class="btn-delete" onclick="deleteEntry('${client.id}')">Delete</button>
+          <button class="btn-edit" onclick="editEntry('${c.id}')">Edit</button>
+          <button class="btn-delete" onclick="deleteEntry('${c.id}')">Delete</button>
         </td>
       </tr>
     `;
-    tableBody.innerHTML += row;
   });
 }
 
+searchInput.addEventListener("input", refreshList);
 
-        function editEntry(id) {
-            const client = getClientById(id);
-            if (!client) return;
-
-            document.getElementById('clientId').value = client.id;
-            document.getElementById('name').value = client.name;
-            document.getElementById('mobile').value = client.mobile;
-            document.getElementById('email').value = client.email;
-            document.getElementById('gst').value = client.gst;
-            document.getElementById('state').value = client.state;
-            document.getElementById('pin').value = client.pin;
-            document.getElementById('address').value = client.address;
-            document.getElementById('notes').value = client.notes;
-
-            document.getElementById('saveBtn').textContent = "Update Client";
-        }
-
-        function deleteEntry(id) {
-            if (confirm('Are you sure you want to delete this client?')) {
-                deleteClient(id);
-                refreshList();
-            }
-        }
-
-        function resetForm() {
-            form.reset();
-            document.getElementById('clientId').value = '';
-            document.getElementById('saveBtn').textContent = "Save Client";
-        }
-    </script>
-<script src="../data/recyclebin.js"></script>
-
- <script src="../shared/menu.js"></script>
-
-<script>
-fetch("../shared/menu.html")
-  .then(res => {
-    if(!res.ok) throw new Error("menu.html not found");
-    return res.text();
-  })
-  .then(html => {
-    document.getElementById("menu-holder").innerHTML = html;
-    initMenu();
-  })
-  .catch(err => console.error("MENU LOAD ERROR:", err));
-
-  const searchInput = document.getElementById("clientSearch");
-if (searchInput) {
-  searchInput.addEventListener("input", refreshList);
+function editEntry(id){
+  const c = getClientById(id);
+  if(!c) return;
+  clientId.value = c.id;
+  name.value = c.name;
+  mobile.value = c.mobile;
+  email.value = c.email;
+  gst.value = c.gst;
+  state.value = c.state;
+  pin.value = c.pin;
+  address.value = c.address;
+  notes.value = c.notes;
+  saveBtn.textContent = "Update Client";
 }
 
+function deleteEntry(id){
+  if(confirm("Delete this client?")){
+    deleteClient(id);
+    refreshList();
+  }
+}
+
+function resetForm(){
+  form.reset();
+  clientId.value = "";
+  saveBtn.textContent = "Save Client";
+}
 </script>
 
+<!-- MENU -->
+<script src="../shared/menu.js"></script>
+<script>
+fetch("../shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
+</script>
 
 </body>
-
 </html>
