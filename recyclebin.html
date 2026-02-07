@@ -9,7 +9,11 @@
 <style>
 body{
   font-family:Arial;
+  margin:0;
   background:#f4f6fb;
+}
+
+.main{
   padding:20px;
 }
 
@@ -69,29 +73,35 @@ th{
 
 <body>
 
+<!-- MENU -->
 <div id="menuContainer"></div>
 
-<h2>🗑 Recycle Bin</h2>
+<!-- PAGE CONTENT -->
+<div class="main">
 
-<div class="card">
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Details</th>
-        <th>Deleted On</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="binTable"></tbody>
-  </table>
+  <h2>🗑 Recycle Bin</h2>
 
-  <div class="small" style="margin-top:10px">
-    ♻ Items older than 30 days are automatically removed.
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Details</th>
+          <th>Deleted On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="binTable"></tbody>
+    </table>
+
+    <div class="small" style="margin-top:10px">
+      ♻ Items older than 30 days are automatically removed.
+    </div>
   </div>
-</div>
 
-<!-- SCRIPTS -->
+</div> <!-- end .main -->
+
+<!-- DATA -->
 <script src="data/storage.js"></script>
 <script src="data/recyclebin.js"></script>
 
@@ -119,15 +129,11 @@ function renderRecycleBin(){
           ${item.type}
         </span>
       </td>
-      <td>
-        ${getLabel(item)}
-      </td>
-      <td>
-        ${new Date(item.deletedAt).toLocaleDateString()}
-      </td>
+      <td>${getLabel(item)}</td>
+      <td>${new Date(item.deletedAt).toLocaleDateString()}</td>
       <td class="actions">
         <button class="restore" onclick="restore('${item.id}')">Restore</button>
-        <button class="delete" onclick="remove('${item.id}')">Delete</button>
+        <button class="delete" onclick="removeItem('${item.id}')">Delete</button>
       </td>
     `;
 
@@ -136,15 +142,10 @@ function renderRecycleBin(){
 }
 
 function getLabel(item){
-  if(item.type === "client"){
-    return item.data.name || "(Client)";
-  }
-  if(item.type === "vendor"){
-    return item.data.name || "(Vendor)";
-  }
-  if(item.type === "bill"){
+  if(item.type === "client") return item.data.name || "(Client)";
+  if(item.type === "vendor") return item.data.name || "(Vendor)";
+  if(item.type === "bill")
     return `${item.data.type || "Bill"} : ${item.data.number || ""}`;
-  }
   return "-";
 }
 
@@ -155,7 +156,7 @@ function restore(id){
   }
 }
 
-function remove(id){
+function removeItem(id){
   if(confirm("Delete permanently?")){
     deleteFromRecycleBin(id);
     renderRecycleBin();
@@ -165,6 +166,7 @@ function remove(id){
 renderRecycleBin();
 </script>
 
+<!-- MENU LOAD -->
 <script src="shared/menu.js"></script>
 <script>
 fetch("shared/menu.html")
