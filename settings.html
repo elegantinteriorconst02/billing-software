@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Settings</title>
@@ -52,10 +52,8 @@ h2{
 }
 
 /* ===== CARD ===== */
-.section{
-  display:none;
-}
-.section.active{display:block}
+.section{display:none;}
+.section.active{display:block;}
 
 .card{
   background:var(--card);
@@ -81,7 +79,12 @@ input,textarea,select{
 
 textarea{resize:vertical}
 
-label{font-size:13px;font-weight:600;margin-bottom:4px;display:block}
+label{
+  font-size:13px;
+  font-weight:600;
+  margin-bottom:4px;
+  display:block;
+}
 
 .saveBtn{
   background:linear-gradient(135deg,var(--secondary),#16a34a);
@@ -104,226 +107,220 @@ label{font-size:13px;font-weight:600;margin-bottom:4px;display:block}
   background:#fff;
   margin-bottom:8px;
 }
-
 </style>
 </head>
 
 <body>
+
+<!-- ===== MENU ===== -->
 <div id="menuContainer"></div>
 
-  <div class="main">
-<div id="menuContainer"></div>
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main">
 
-<div class="container">
+  <div class="container">
 
-<h2>⚙ Settings</h2>
+    <h2>⚙ Settings</h2>
 
-<!-- TABS -->
-<div class="tabs">
-  <button class="active" onclick="openTab('company')">🏢 Company</button>
-  <button onclick="openTab('billing')">🧾 Billing</button>
-  <button onclick="openTab('series')">🔢 Series</button>
-  <button onclick="openTab('theme')">🎨 Theme</button>
-</div>
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="active" data-tab="company">🏢 Company</button>
+      <button data-tab="billing">🧾 Billing</button>
+      <button data-tab="series">🔢 Series</button>
+      <button data-tab="theme">🎨 Theme</button>
+    </div>
 
-<!-- COMPANY -->
-<div id="company" class="section active card">
-<h3>Company Details</h3>
+    <!-- COMPANY -->
+    <div id="company" class="section active card">
+      <h3>Company Details</h3>
 
-<div class="grid">
-  <div>
-    <label>Company Name</label>
-    <input id="sCompany">
-  </div>
+      <div class="grid">
+        <div><label>Company Name</label><input id="sCompany"></div>
+        <div><label>GSTIN</label><input id="sGst"></div>
+        <div><label>PAN</label><input id="sPan"></div>
+        <div><label>CIN</label><input id="sCin"></div>
+        <div><label>Phone</label><input id="sPhone"></div>
+        <div><label>Email</label><input id="sEmail"></div>
+      </div>
 
-  <div>
-    <label>GSTIN</label>
-    <input id="sGst">
-  </div>
+      <label>Address</label>
+      <textarea id="sAddress"></textarea>
 
-  <div>
-    <label>PAN</label>
-    <input id="sPan">
-  </div>
+      <label>Terms & Conditions</label>
+      <textarea id="sTerms"></textarea>
 
-  <div>
-    <label>CIN</label>
-    <input id="sCin">
-  </div>
+      <label>Note</label>
+      <textarea id="sNote"></textarea>
 
-  <div>
-    <label>Phone</label>
-    <input id="sPhone">
-  </div>
+      <div class="grid">
+        <div><label>Logo</label><input type="file" id="sLogo"></div>
+        <div><label>Stamp</label><input type="file" id="sStamp"></div>
+        <div><label>Signature</label><input type="file" id="sSign"></div>
+      </div>
 
-  <div>
-    <label>Email</label>
-    <input id="sEmail">
-  </div>
-</div>
+      <br>
+      <button class="saveBtn" id="saveCompanyBtn">💾 Save Company</button>
+    </div>
 
-<label>Address</label>
-<textarea id="sAddress"></textarea>
+    <!-- BILLING -->
+    <div id="billing" class="section card">
+      <h3>Billing Preferences</h3>
 
-<label>Terms & Conditions</label>
-<textarea id="sTerms"></textarea>
+      <label>
+        <input type="checkbox" id="autoDate" checked>
+        Auto current Indian Date
+      </label>
 
-<label>Note</label>
-<textarea id="sNote"></textarea>
+      <label>
+        <input type="checkbox" id="autoClientSave" checked>
+        Auto save client from billing
+      </label>
 
-<div class="grid">
-  <div><label>Logo</label><input type="file" id="sLogo"></div>
-  <div><label>Stamp</label><input type="file" id="sStamp"></div>
-  <div><label>Signature</label><input type="file" id="sSign"></div>
-</div>
+      <br><br>
+      <button class="saveBtn" id="saveBillingBtn">💾 Save Billing Settings</button>
+    </div>
 
-<br>
-<button class="saveBtn" onclick="saveCompany()">💾 Save Company</button>
-</div>
+    <!-- SERIES -->
+    <div id="series" class="section card">
+      <h3>Document Number Series</h3>
 
-<!-- BILLING -->
-<div id="billing" class="section card">
-<h3>Billing Preferences</h3>
+      <div class="grid">
+        <div>
+          <label>Invoice Series</label>
+          <input id="invSeries">
+        </div>
+        <div>
+          <label>Invoice Start No</label>
+          <input id="invStart" type="number">
+        </div>
 
-<label>
-  <input type="checkbox" id="autoDate" checked>
-  Auto current Indian Date
-</label>
+        <div>
+          <label>Quotation Series</label>
+          <input id="qtSeries">
+        </div>
+        <div>
+          <label>Quotation Start No</label>
+          <input id="qtStart" type="number">
+        </div>
+      </div>
 
-<label>
-  <input type="checkbox" id="autoClientSave" checked>
-  Auto save client from billing
-</label>
+      <br>
+      <button class="saveBtn" id="saveSeriesBtn">💾 Save Series</button>
+    </div>
 
-<br><br>
-<button class="saveBtn" onclick="saveBilling()">💾 Save Billing Settings</button>
-</div>
+    <!-- THEME -->
+    <div id="theme" class="section card">
+      <h3>Invoice Theme</h3>
 
-<!-- SERIES -->
-<div id="series" class="section card">
-<h3>Document Number Series</h3>
+      <div class="themeBox">
+        <div class="themeOption">
+          <input type="radio" name="theme" checked> Modern Blue
+        </div>
+        <div class="themeOption">
+          <input type="radio" name="theme"> Minimal Black
+        </div>
+        <div class="themeOption">
+          <input type="radio" name="theme"> Classic GST
+        </div>
+      </div>
 
-<div class="grid">
-  <div>
-    <label>Invoice Series</label>
-    <input id="invSeries" placeholder="INV-2024-">
-  </div>
-  <div>
-    <label>Invoice Start No</label>
-    <input id="invStart" type="number">
-  </div>
+      <br>
+      <button class="saveBtn">Apply Theme</button>
+    </div>
 
-  <div>
-    <label>Quotation Series</label>
-    <input id="qtSeries" placeholder="QT-2024-">
-  </div>
-  <div>
-    <label>Quotation Start No</label>
-    <input id="qtStart" type="number">
-  </div>
-</div>
-
-<br>
-<button class="saveBtn" onclick="saveSeries()">💾 Save Series</button>
-</div>
-
-<!-- THEME -->
-<div id="theme" class="section card">
-<h3>Invoice Theme</h3>
-
-<div class="themeBox">
-  <div class="themeOption">
-    <input type="radio" name="theme" checked> Modern Blue
-  </div>
-  <div class="themeOption">
-    <input type="radio" name="theme"> Minimal Black
-  </div>
-  <div class="themeOption">
-    <input type="radio" name="theme"> Classic GST
   </div>
 </div>
 
-<br>
-<button class="saveBtn">Apply Theme</button>
-</div>
-
-</div>
-
+<!-- ===== MENU SCRIPT ===== -->
 <script src="shared/menu.js"></script>
 <script>
 fetch("shared/menu.html")
-.then(r=>r.text())
-.then(html=>{
-  menuContainer.innerHTML=html;
-  initMenu();
-  loadData();
-});
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
 
-function openTab(id){
- document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
- document.getElementById(id).classList.add("active");
- document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
- event.target.classList.add("active");
-}
+/* ===== TAB HANDLER ===== */
+document.querySelectorAll(".tabs button").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
 
 /* ===== STORAGE ===== */
 function saveCompany(){
- localStorage.setItem("company",JSON.stringify({
-  name:sCompany.value,addr:sAddress.value,
-  phone:sPhone.value,email:sEmail.value,
-  gst:sGst.value,pan:sPan.value,cin:sCin.value,
-  terms:sTerms.value,note:sNote.value
- }));
- saveFile("sLogo","logo");
- saveFile("sStamp","stamp");
- saveFile("sSign","sign");
- alert("Company Saved");
+  localStorage.setItem("company",JSON.stringify({
+    name:sCompany.value,
+    addr:sAddress.value,
+    phone:sPhone.value,
+    email:sEmail.value,
+    gst:sGst.value,
+    pan:sPan.value,
+    cin:sCin.value,
+    terms:sTerms.value,
+    note:sNote.value
+  }));
+  saveFile("sLogo","logo");
+  saveFile("sStamp","stamp");
+  saveFile("sSign","sign");
+  alert("Company Saved");
 }
 
 function saveBilling(){
- localStorage.setItem("billingSettings",JSON.stringify({
-  autoDate:autoDate.checked,
-  autoClient:autoClientSave.checked
- }));
- alert("Billing Settings Saved");
+  localStorage.setItem("billingSettings",JSON.stringify({
+    autoDate:autoDate.checked,
+    autoClient:autoClientSave.checked
+  }));
+  alert("Billing Settings Saved");
 }
 
 function saveSeries(){
- localStorage.setItem("docSeries",JSON.stringify({
-  inv:{s:invSeries.value,n:+invStart.value||1},
-  qt:{s:qtSeries.value,n:+qtStart.value||1}
- }));
- alert("Series Saved");
+  localStorage.setItem("docSeries",JSON.stringify({
+    inv:{s:invSeries.value,n:+invStart.value||1},
+    qt:{s:qtSeries.value,n:+qtStart.value||1}
+  }));
+  alert("Series Saved");
 }
 
 function loadData(){
- const c=JSON.parse(localStorage.getItem("company")||"{}");
- sCompany.value=c.name||"";sAddress.value=c.addr||"";
- sPhone.value=c.phone||"";sEmail.value=c.email||"";
- sGst.value=c.gst||"";sPan.value=c.pan||"";sCin.value=c.cin||"";
- sTerms.value=c.terms||"";sNote.value=c.note||"";
+  const c=JSON.parse(localStorage.getItem("company")||"{}");
+  sCompany.value=c.name||"";
+  sAddress.value=c.addr||"";
+  sPhone.value=c.phone||"";
+  sEmail.value=c.email||"";
+  sGst.value=c.gst||"";
+  sPan.value=c.pan||"";
+  sCin.value=c.cin||"";
+  sTerms.value=c.terms||"";
+  sNote.value=c.note||"";
 
- const s=JSON.parse(localStorage.getItem("docSeries")||"{}");
- invSeries.value=s.inv?.s||"";invStart.value=s.inv?.n||1;
- qtSeries.value=s.qt?.s||"";qtStart.value=s.qt?.n||1;
+  const s=JSON.parse(localStorage.getItem("docSeries")||"{}");
+  invSeries.value=s.inv?.s||"";
+  invStart.value=s.inv?.n||1;
+  qtSeries.value=s.qt?.s||"";
+  qtStart.value=s.qt?.n||1;
 }
 
 function saveFile(id,key){
- const f=document.getElementById(id).files[0];
- if(!f)return;
- const r=new FileReader();
- r.onload=()=>localStorage.setItem(key,r.result);
- r.readAsDataURL(f);
+  const f=document.getElementById(id).files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>localStorage.setItem(key,r.result);
+  r.readAsDataURL(f);
 }
+
+/* Bind buttons */
+saveCompanyBtn.onclick=saveCompany;
+saveBillingBtn.onclick=saveBilling;
+saveSeriesBtn.onclick=saveSeries;
+
+loadData();
 </script>
-<script src="shared/menu.js"></script>
-  <script>
-    fetch("shared/menu.html")
-      .then(r=>r.text())
-      .then(html=>{
-        menuContainer.innerHTML = html;
-        initMenu();
-      });
-  </script>
+
 </body>
 </html>
