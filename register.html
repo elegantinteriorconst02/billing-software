@@ -7,7 +7,15 @@
 <!-- MENU STYLE (same as index) -->
 <style>
 
-body{font-family:Arial;margin:0;padding:20px}
+body{
+  font-family:Arial;
+  margin:0;
+}
+
+.main{
+  padding:20px;
+}
+
 
 table{
   width:100%;
@@ -50,32 +58,18 @@ input,select{
 <script src="data/bills.js"></script>
 </head>
 
-<body>
 
 
 
 
-    <!-- MENU BUTTON -->
-<button id="menuBtn" onclick="toggleMenu()">☰</button>
 
-<div id="sidebar">
-  <h3>Billing App</h3>
+    <body>
 
-  <a href="index.html" data-page="index" onclick="toggleMenu(false)">
-    🧾 Billing <span class="activeDot"></span>
-  </a>
-
-  <a href="masters/client.html" data-page="client" onclick="toggleMenu(false)">
-    👤 Client Master <span class="activeDot"></span>
-  </a>
-
-  <a href="register.html" data-page="register" onclick="toggleMenu(false)">
-    📂 Records <span class="activeDot"></span>
-  </a>
-</div>
-
-<div id="overlay" onclick="toggleMenu(false)"></div>
+<!-- MENU LOAD হবে এখানে -->
 <div id="menuContainer"></div>
+
+<!-- PAGE CONTENT -->
+<div class="main">
 
 
 <!-- 🔍 FILTER -->
@@ -206,17 +200,7 @@ function exportExcel(){
 <tbody id="rows"></tbody>
 </table>
 
-<script>
-/* ===== MENU JS ===== */
-function toggleMenu(){
-  document.body.classList.toggle("menu-open");
-}
-(function(){
-  document.querySelectorAll("#sidebar a").forEach(a=>{
-    if(a.dataset.page==="register") a.classList.add("active");
-  });
-})();
-</script>
+
 
 <script>
 /* ===== LOAD RECORDS ===== */
@@ -354,25 +338,7 @@ function downloadFile(content, filename){
 
 </script>
 
-<script>
-function toggleMenu(force){
-  if(force === false){
-    document.body.classList.remove("menu-open");
-  }else{
-    document.body.classList.toggle("menu-open");
-  }
-}
 
-/* ACTIVE MENU */
-(function(){
-  const page = location.pathname.split("/").pop();
-  document.querySelectorAll("#sidebar a").forEach(a=>{
-    if(page.includes(a.dataset.page)){
-      a.classList.add("active");
-    }
-  });
-})();
-</script>
 
 <h3>Monthly Summary</h3>
 <table>
@@ -444,15 +410,7 @@ function exportExcel(){
 </script>
 
 
-<script src="shared/menu.js"></script>
-<script>
-fetch("shared/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu-holder").innerHTML = html;
-    initMenu();
-  });
-</script>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="export/excel.js"></script>
@@ -476,7 +434,7 @@ fetch("shared/menu.html")
   });
 })();
 </script>
-
+</div> <!-- end of .main -->
 
 <script src="shared/menu.js"></script>
 <script>
