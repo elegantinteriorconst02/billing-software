@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin – User Management</title>
+
+<link rel="stylesheet" href="assets/menu.css">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f4f6fb;
+}
+.main{
+  padding:20px;
+  max-width:1000px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+}
+th{
+  background:#2563eb;
+  color:#fff;
+}
+select,button{
+  padding:6px 10px;
+  border-radius:6px;
+}
+button{
+  border:none;
+  cursor:pointer;
+}
+.approve{background:#22c55e;color:#fff}
+.reject{background:#dc3545;color:#fff}
+</style>
+</head>
+
+<body>
+
+<div id="menuContainer"></div>
+
+<div class="main">
+<h2>👤 User Registration / Admin Control</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Name</th>
+  <th>Email</th>
+  <th>Role</th>
+  <th>Status</th>
+  <th>Action</th>
+</tr>
+</thead>
+<tbody id="userTable"></tbody>
+</table>
+</div>
+
+<script>
+/* ----- USER STORAGE ----- */
+function getUsers(){
+  return JSON.parse(localStorage.getItem("users") || "[]");
+}
+function saveUsers(u){
+  localStorage.setItem("users", JSON.stringify(u));
+}
+
+/* ----- LOAD USERS ----- */
+function loadUsers(){
+  const users = getUsers();
+  const tb = document.getElementById("userTable");
+  tb.innerHTML = "";
+
+  users.forEach((u,i)=>{
+    tb.innerHTML += `
+      <tr>
+        <td>${u.name}</td>
+        <td>${u.email}</td>
+        <td>
+          <select onchange="updateRole(${i}, this.value)">
+            <option value="staff" ${u.role==="staff"?"selected":""}>Staff</option>
+            <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
+          </select>
+        </td>
+        <td>${u.approved ? "✅ Approved" : "⏳ Pending"}</td>
+        <td>
+          ${u.approved
+            ? `<button class="reject" onclick="removeUser(${i})">Remove</button>`
+            : `<button class="approve" onclick="approveUser(${i})">Approve</button>`
+          }
+        </td>
+      </tr>
+    `;
+  });
+}
+
+/* ----- ACTIONS ----- */
+function approveUser(i){
+  const users = getUsers();
+  users[i].approved = true;
+  saveUsers(users);
+  loadUsers();
+}
+function removeUser(i){
+  const users = getUsers();
+  users.splice(i,1);
+  saveUsers(users);
+  loadUsers();
+}
+function updateRole(i, role){
+  const users = getUsers();
+  users[i].role = role;
+  saveUsers(users);
+}
+
+loadUsers();
+</script>
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
+</script>
+
+</body>
+</html>
