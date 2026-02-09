@@ -18,7 +18,7 @@ function initMenu(){
   btn && btn.addEventListener("click", ()=>toggleMenu());
   overlay && overlay.addEventListener("click", ()=>toggleMenu(false));
 
-  // navigation handler
+  /* 🔗 navigation */
   document.querySelectorAll("#sidebar a[data-go]").forEach(a=>{
     a.addEventListener("click", ()=>{
       const page = a.dataset.go;
@@ -28,7 +28,7 @@ function initMenu(){
     });
   });
 
-  // active highlight
+  /* 📍 active page */
   const page = location.pathname.split("/").pop();
   document.querySelectorAll("#sidebar a[data-page]").forEach(a=>{
     if(page && page.includes(a.dataset.page)){
@@ -36,7 +36,7 @@ function initMenu(){
     }
   });
 
-  // logout
+  /* 🚪 logout */
   const logoutBtn = document.getElementById("logoutBtn");
   logoutBtn && logoutBtn.addEventListener("click", ()=>{
     if(confirm("Are you sure you want to logout?")){
@@ -45,16 +45,28 @@ function initMenu(){
     }
   });
 
+  /* 👤 USER + ROLE CHECK */
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+  if(!user.uid){
+    location.href = BASE_PATH + "login.html";
+    return;
+  }
+
+  /* 🏷 USER BADGE */
+  const badge = document.getElementById("userBadge");
+  if(badge){
+    badge.textContent =
+      user.name + (user.role === "admin" ? " (Admin)" : " (Staff)");
+  }
+
+  /* 🔒 admin-only hide */
+  if(user.role !== "admin"){
+    document.querySelectorAll(".admin-only").forEach(el=>{
+      el.style.display = "none";
+    });
+  }
+
   document.body.classList.remove("menu-open");
 }
-const users = JSON.parse(localStorage.getItem("users") || "[]");
-const user  = JSON.parse(localStorage.getItem("user") || "{}");
-
-const record = users.find(u => u.uid === user.uid);
-
-if(record && record.role !== "admin"){
-  document.querySelectorAll(".admin-only").forEach(el=>{
-    el.style.display = "none";
-  });
-}
-
