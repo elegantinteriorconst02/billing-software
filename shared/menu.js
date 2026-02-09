@@ -1,3 +1,26 @@
+/* 🔐 AUTH + APPROVAL GUARD */
+const user = JSON.parse(localStorage.getItem("user") || "{}");
+const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+const record = users.find(u => u.uid === user.uid);
+
+if (!user.uid || !record) {
+  location.href = BASE_PATH + "login.html";
+}
+
+/* ❌ unapproved user auto logout */
+if (!record.approved) {
+  alert("Your account is not approved by admin yet.");
+  localStorage.removeItem("user");
+  location.href = BASE_PATH + "login.html";
+}
+
+/* sync role */
+user.role = record.role;
+localStorage.setItem("user", JSON.stringify(user));
+
+
+
 // 🔑 Base path detect (GitHub Pages + Local)
 const BASE_PATH = location.pathname.includes("/billing-software/")
   ? "/billing-software/"
