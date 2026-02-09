@@ -1,17 +1,16 @@
-<h3>
-  Billing App <br>
-  <small id="userBadge" style="font-size:12px;color:#c7d2fe"></small>
-</h3>
-
-
 <!-- ☰ HAMBURGER -->
 <button id="menuBtn">☰</button>
 
 <!-- SIDEBAR -->
 <div id="sidebar">
-  <h3>Billing App</h3>
 
-  <!-- COMMON -->
+  <!-- APP TITLE + USER BADGE -->
+  <h3>
+    Billing App <br>
+    <small id="userBadge" style="font-size:12px;color:#c7d2fe"></small>
+  </h3>
+
+  <!-- MENU LINKS -->
   <a data-go="dashboard.html" data-page="dashboard">
     📊 Dashboard <span class="activeDot"></span>
   </a>
@@ -24,25 +23,24 @@
     📂 Records <span class="activeDot"></span>
   </a>
 
-  <!-- ADMIN ONLY -->
-  <a class="admin-only" data-go="masters/client.html" data-page="client">
+  <a data-go="masters/client.html" data-page="client">
     👤 Client Master <span class="activeDot"></span>
   </a>
 
-  <a class="admin-only" data-go="masters/vendor.html" data-page="vendor">
+  <a data-go="masters/vendor.html" data-page="vendor">
     🏭 Vendor Master <span class="activeDot"></span>
   </a>
 
-  <a class="admin-only" data-go="masters/purchase.html">
+  <a data-go="masters/purchase.html">
     🧾 Purchase Entry
   </a>
 
-  <a class="admin-only" data-go="settings.html" data-page="settings">
+  <a data-go="settings.html" data-page="settings">
     ⚙ Settings <span class="activeDot"></span>
   </a>
 
-  <a class="admin-only" data-go="admin-users.html">
-    👤 Users
+  <a data-go="admin-users.html">
+    👥 Users
   </a>
 
   <a data-go="recyclebin.html" data-page="recycle">
