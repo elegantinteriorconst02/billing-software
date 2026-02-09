@@ -47,3 +47,14 @@ function initMenu(){
 
   document.body.classList.remove("menu-open");
 }
+const users = JSON.parse(localStorage.getItem("users") || "[]");
+const user  = JSON.parse(localStorage.getItem("user") || "{}");
+
+const record = users.find(u => u.uid === user.uid);
+
+if(record && record.role !== "admin"){
+  document.querySelectorAll(".admin-only").forEach(el=>{
+    el.style.display = "none";
+  });
+}
+
