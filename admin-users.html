@@ -9,6 +9,7 @@
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:8px}
 th{background:#eee}
+button{padding:4px 8px}
 </style>
 </head>
 
@@ -25,27 +26,39 @@ th{background:#eee}
   <th>Name</th>
   <th>Email</th>
   <th>Role</th>
-  <th>Approved</th>
+  <th>Status</th>
   <th>Action</th>
 </tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
 
-<h3>🧾 Audit Log</h3>
+<h3>📜 Audit Log</h3>
 <ul id="audit"></ul>
 </div>
 
 <script>
 const admin = JSON.parse(localStorage.getItem("user")||"{}");
-if(admin.role!=="admin"){
+
+if(admin.role !== "admin"){
   alert("Admin only");
   location.href="dashboard.html";
 }
 
-const users = JSON.parse(localStorage.getItem("users")||"[]");
-const audit = JSON.parse(localStorage.getItem("auditLog")||"[]");
+let users = JSON.parse(localStorage.getItem("users")||"[]");
+let audit = JSON.parse(localStorage.getItem("auditLog")||"[]");
 
+function log(action, target){
+  audit.unshift({
+    time: new Date().toLocaleString(),
+    by: admin.name,
+    action,
+    target
+  });
+  localStorage.setItem("auditLog", JSON.stringify(audit));
+}
+
+/* render */
 function render(){
   rows.innerHTML="";
   users.forEach(u=>{
@@ -55,11 +68,11 @@ function render(){
       <td>${u.email}</td>
       <td>
         <select onchange="setRole('${u.uid}',this.value)">
-          <option ${u.role==="staff"?"selected":""}>staff</option>
-          <option ${u.role==="admin"?"selected":""}>admin</option>
+          <option value="staff" ${u.role==="staff"?"selected":""}>staff</option>
+          <option value="admin" ${u.role==="admin"?"selected":""}>admin</option>
         </select>
       </td>
-      <td>${u.approved?"✅":"❌"}</td>
+      <td>${u.approved?"✅ Approved":"⏳ Pending"}</td>
       <td>
         ${u.approved?"":"<button onclick=\"approve('"+u.uid+"')\">Approve</button>"}
       </td>
@@ -70,26 +83,32 @@ function render(){
   auditEl.innerHTML="";
   audit.forEach(a=>{
     const li=document.createElement("li");
-    li.textContent=`${a.time} – ${a.by} approved ${a.user}`;
+    li.textContent =
+      `${a.time} – ${a.by} ${a.action} ${a.target}`;
     auditEl.appendChild(li);
   });
 }
 
+/* approve */
 function approve(uid){
   const u=users.find(x=>x.uid===uid);
+  if(!u) return;
+
   u.approved=true;
-  audit.push({
-    time:new Date().toLocaleString(),
-    by:admin.name,
-    user:u.email
-  });
+  log("approved", u.email);
+
   localStorage.setItem("users",JSON.stringify(users));
-  localStorage.setItem("auditLog",JSON.stringify(audit));
   render();
 }
 
+/* role change */
 function setRole(uid,role){
-  users.find(x=>x.uid===uid).role=role;
+  const u=users.find(x=>x.uid===uid);
+  if(!u) return;
+
+  u.role=role;
+  log("changed role to "+role, u.email);
+
   localStorage.setItem("users",JSON.stringify(users));
 }
 
@@ -98,9 +117,12 @@ render();
 
 <script src="shared/menu.js"></script>
 <script>
-fetch("shared/menu.html").then(r=>r.text()).then(h=>{
-  menuContainer.innerHTML=h;initMenu();
-});
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menuContainer.innerHTML=h;
+    initMenu();
+  });
 </script>
 
 </body>
