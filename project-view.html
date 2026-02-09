@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Project</title>
+<link rel="stylesheet" href="assets/menu.css">
+
+<style>
+.main{padding:20px}
+.card{background:#fff;padding:16px;border-radius:12px;margin-bottom:16px}
+</style>
+</head>
+
+<body>
+
+<div id="menuContainer"></div>
+
+<div class="main" id="box"></div>
+
+<script src="data/projects.js"></script>
+
+<script>
+const id = new URLSearchParams(location.search).get("id");
+const project = getProject(id);
+
+if(!project){
+  alert("Project not found");
+  location.href="projects.html";
+}
+
+box.innerHTML=`
+  <div class="card">
+    <h2>${project.name}</h2>
+    <p>Status: <b>${project.status}</b></p>
+    <p>Start Date: ${project.startDate}</p>
+  </div>
+
+  <div class="card">
+    <h3>💰 Financial Summary</h3>
+    <p>Total Income: ₹ ${project.incomes.reduce((s,x)=>s+Number(x.amount||0),0)}</p>
+    <p>Total Expense: ₹ ${project.expenses.reduce((s,x)=>s+Number(x.amount||0),0)}</p>
+  </div>
+`;
+</script>
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(h=>{menuContainer.innerHTML=h;initMenu();});
+</script>
+
+</body>
+</html>
