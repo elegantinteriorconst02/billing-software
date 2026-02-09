@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Admin – User Management</title>
@@ -12,117 +12,88 @@ body{
   font-family:Arial;
   background:#f4f6fb;
 }
+
 .main{
   padding:20px;
-  max-width:1000px;
 }
+
+h2{
+  margin-bottom:14px;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
   background:#fff;
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
 }
+
 th,td{
   padding:10px;
   border-bottom:1px solid #eee;
   font-size:14px;
 }
+
 th{
   background:#2563eb;
   color:#fff;
+  text-align:left;
 }
-select,button{
-  padding:6px 10px;
-  border-radius:6px;
+
+.badge{
+  padding:4px 8px;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:bold;
 }
+
+.admin{background:#dcfce7;color:#166534}
+.staff{background:#e0e7ff;color:#1e3a8a}
+.pending{background:#fef3c7;color:#92400e}
+.approved{background:#dcfce7;color:#166534}
+
 button{
+  padding:5px 10px;
   border:none;
+  border-radius:6px;
   cursor:pointer;
+  font-size:12px;
 }
-.approve{background:#22c55e;color:#fff}
-.reject{background:#dc3545;color:#fff}
+
+.approve{background:#16a34a;color:#fff}
+.block{background:#dc2626;color:#fff}
+.role{background:#2563eb;color:#fff}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
 </style>
 </head>
 
 <body>
 
+<!-- MENU -->
 <div id="menuContainer"></div>
 
 <div class="main">
-<h2>👤 User Registration / Admin Control</h2>
+  <h2>👤 User Management</h2>
 
-<table>
-<thead>
-<tr>
-  <th>Name</th>
-  <th>Email</th>
-  <th>Role</th>
-  <th>Status</th>
-  <th>Action</th>
-</tr>
-</thead>
-<tbody id="userTable"></tbody>
-</table>
-</div>
-
-<script>
-/* ----- USER STORAGE ----- */
-function getUsers(){
-  return JSON.parse(localStorage.getItem("users") || "[]");
-}
-function saveUsers(u){
-  localStorage.setItem("users", JSON.stringify(u));
-}
-
-/* ----- LOAD USERS ----- */
-function loadUsers(){
-  const users = getUsers();
-  const tb = document.getElementById("userTable");
-  tb.innerHTML = "";
-
-  users.forEach((u,i)=>{
-    tb.innerHTML += `
+  <table>
+    <thead>
       <tr>
-        <td>${u.name}</td>
-        <td>${u.email}</td>
-        <td>
-          <select onchange="updateRole(${i}, this.value)">
-            <option value="staff" ${u.role==="staff"?"selected":""}>Staff</option>
-            <option value="admin" ${u.role==="admin"?"selected":""}>Admin</option>
-          </select>
-        </td>
-        <td>${u.approved ? "✅ Approved" : "⏳ Pending"}</td>
-        <td>
-          ${u.approved
-            ? `<button class="reject" onclick="removeUser(${i})">Remove</button>`
-            : `<button class="approve" onclick="approveUser(${i})">Approve</button>`
-          }
-        </td>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Actions</th>
       </tr>
-    `;
-  });
-}
-
-/* ----- ACTIONS ----- */
-function approveUser(i){
-  const users = getUsers();
-  users[i].approved = true;
-  saveUsers(users);
-  loadUsers();
-}
-function removeUser(i){
-  const users = getUsers();
-  users.splice(i,1);
-  saveUsers(users);
-  loadUsers();
-}
-function updateRole(i, role){
-  const users = getUsers();
-  users[i].role = role;
-  saveUsers(users);
-}
-
-loadUsers();
-</script>
+    </thead>
+    <tbody id="userRows"></tbody>
+  </table>
+</div>
 
 <script src="shared/menu.js"></script>
 <script>
@@ -131,7 +102,80 @@ fetch("shared/menu.html")
   .then(html=>{
     document.getElementById("menuContainer").innerHTML = html;
     initMenu();
+    guardAdmin();
+    renderUsers();
   });
+
+/* 🔐 ADMIN GUARD */
+function guardAdmin(){
+  const me = JSON.parse(localStorage.getItem("user"));
+  const users = JSON.parse(localStorage.getItem("users")||"[]");
+  const self = users.find(u => u.uid === me?.uid);
+
+  if(!self || self.role !== "admin"){
+    alert("Admin access only");
+    location.href = "dashboard.html";
+  }
+}
+
+/* 👤 RENDER USERS */
+function renderUsers(){
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+  const tbody = document.getElementById("userRows");
+  tbody.innerHTML = "";
+
+  users.forEach(u=>{
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${u.name}</td>
+      <td>${u.email}</td>
+      <td>
+        <span class="badge ${u.role}">
+          ${u.role.toUpperCase()}
+        </span>
+      </td>
+      <td>
+        <span class="badge ${u.approved ? "approved":"pending"}">
+          ${u.approved ? "APPROVED":"PENDING"}
+        </span>
+      </td>
+      <td>
+        <button class="approve"
+          onclick="toggleApprove('${u.uid}')">
+          ${u.approved ? "Block":"Approve"}
+        </button>
+        <button class="role"
+          onclick="toggleRole('${u.uid}')">
+          Make ${u.role === "admin" ? "Staff":"Admin"}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ✅ APPROVE / BLOCK */
+function toggleApprove(uid){
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+  const u = users.find(x=>x.uid===uid);
+  if(!u) return;
+
+  u.approved = !u.approved;
+  localStorage.setItem("users", JSON.stringify(users));
+  renderUsers();
+}
+
+/* 🔁 ROLE CHANGE */
+function toggleRole(uid){
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+  const u = users.find(x=>x.uid===uid);
+  if(!u) return;
+
+  u.role = u.role === "admin" ? "staff" : "admin";
+  localStorage.setItem("users", JSON.stringify(users));
+  renderUsers();
+}
 </script>
 
 </body>
