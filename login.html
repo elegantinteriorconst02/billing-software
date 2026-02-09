@@ -20,20 +20,28 @@ body{
 .card{
   background:#fff;
   padding:30px;
-  width:320px;
+  width:340px;
   border-radius:16px;
   box-shadow:0 20px 40px rgba(0,0,0,.2);
   text-align:center;
 }
 
-h2{
-  margin:0 0 10px;
-}
+h2{margin:0 0 6px}
 
 p{
   color:#666;
   font-size:14px;
-  margin-bottom:20px;
+  margin-bottom:16px;
+}
+
+.last-user{
+  background:#f1f5f9;
+  padding:10px;
+  border-radius:10px;
+  font-size:13px;
+  color:#333;
+  margin-bottom:18px;
+  display:none;
 }
 
 button{
@@ -47,8 +55,12 @@ button{
   color:#fff;
 }
 
-button:hover{
-  background:#1f4fd8;
+button:hover{background:#1f4fd8}
+
+.small{
+  font-size:12px;
+  color:#888;
+  margin-top:14px;
 }
 </style>
 </head>
@@ -58,7 +70,15 @@ button:hover{
 <div class="card">
   <h2>Billing App</h2>
   <p>Sign in to continue</p>
+
+  <!-- LAST LOGIN INFO -->
+  <div class="last-user" id="lastUserBox"></div>
+
   <button onclick="login()">🔐 Sign in with Google</button>
+
+  <div class="small">
+    Authorized users only
+  </div>
 </div>
 
 <!-- FIREBASE -->
@@ -66,8 +86,7 @@ button:hover{
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE CONFIG (replace with your keys) */
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+/* 🔥 FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAJliCUJkElsPwbJUGrTUmB7EPyiGaCniQ",
   authDomain: "eic-billing-software-55635.firebaseapp.com",
@@ -81,18 +100,58 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+/* 👁 SHOW LAST LOGIN USER */
+(function showLastUser(){
+  const last = JSON.parse(localStorage.getItem("lastUser"));
+  if(!last) return;
+
+  const box = document.getElementById("lastUserBox");
+  box.style.display = "block";
+  box.innerHTML = `
+    <b>Last signed in:</b><br>
+    ${last.name}<br>
+    <small>${last.email}</small>
+  `;
+})();
+
 /* 🔐 GOOGLE LOGIN */
 function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
+
   auth.signInWithPopup(provider)
     .then(res=>{
       const user = res.user;
-      localStorage.setItem("user", JSON.stringify({
+
+      const userObj = {
         uid: user.uid,
         name: user.displayName,
         email: user.email,
         photo: user.photoURL
+      };
+
+      // active session
+      localStorage.setItem("user", JSON.stringify(userObj));
+
+      // last login display
+      localStorage.setItem("lastUser", JSON.stringify({
+        name: user.displayName,
+        email: user.email
       }));
+
+      // user registry
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+      if(!users.find(u => u.uid === user.uid)){
+        users.push({
+          uid: user.uid,
+          name: user.displayName,
+          email: user.email,
+          role: "staff",
+          approved: false
+        });
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+
       location.href = "dashboard.html";
     })
     .catch(err=>{
