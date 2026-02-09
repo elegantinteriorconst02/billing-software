@@ -20,7 +20,7 @@ body{
 .card{
   background:#fff;
   padding:30px;
-  width:340px;
+  width:360px;
   border-radius:16px;
   box-shadow:0 20px 40px rgba(0,0,0,.2);
   text-align:center;
@@ -55,7 +55,11 @@ button{
   color:#fff;
 }
 
-button:hover{background:#1f4fd8}
+button.staff{
+  background:#16a34a;
+}
+
+button:hover{opacity:.92}
 
 .small{
   font-size:12px;
@@ -74,7 +78,9 @@ button:hover{background:#1f4fd8}
   <!-- LAST LOGIN INFO -->
   <div class="last-user" id="lastUserBox"></div>
 
-  <button onclick="login()">🔐 Sign in with Google</button>
+  <button onclick="login('admin')">🔐 Admin Login</button>
+  <br><br>
+  <button class="staff" onclick="login('staff')">👤 Staff Login</button>
 
   <div class="small">
     Authorized users only
@@ -93,8 +99,7 @@ const firebaseConfig = {
   projectId: "eic-billing-software-55635",
   storageBucket: "eic-billing-software-55635.firebasestorage.app",
   messagingSenderId: "376103136888",
-  appId: "1:376103136888:web:ae1ab4d7195037a529478d",
-  measurementId: "G-VJ0XY7WV08"
+  appId: "1:376103136888:web:ae1ab4d7195037a529478d"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -108,46 +113,49 @@ const auth = firebase.auth();
   const box = document.getElementById("lastUserBox");
   box.style.display = "block";
   box.innerHTML = `
-    <b>Last signed in:</b><br>
+    <b>Last login:</b><br>
     ${last.name}<br>
-    <small>${last.email}</small>
+    <small>${last.email}</small><br>
+    <small>${last.role}</small>
   `;
 })();
 
-/* 🔐 GOOGLE LOGIN */
-function login(){
+/* 🔐 LOGIN */
+function login(role){
   const provider = new firebase.auth.GoogleAuthProvider();
 
   auth.signInWithPopup(provider)
     .then(res=>{
-      const user = res.user;
+      const u = res.user;
 
       const userObj = {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        photo: user.photoURL
+        uid: u.uid,
+        name: u.displayName,
+        email: u.email,
+        photo: u.photoURL,
+        role: role
       };
 
       // active session
       localStorage.setItem("user", JSON.stringify(userObj));
 
-      // last login display
+      // last login info
       localStorage.setItem("lastUser", JSON.stringify({
-        name: user.displayName,
-        email: user.email
+        name: u.displayName,
+        email: u.email,
+        role: role,
+        time: new Date().toLocaleString()
       }));
 
-      // user registry
+      // optional registry (history)
       const users = JSON.parse(localStorage.getItem("users") || "[]");
-
-      if(!users.find(u => u.uid === user.uid)){
+      if(!users.find(x => x.uid === u.uid)){
         users.push({
-          uid: user.uid,
-          name: user.displayName,
-          email: user.email,
-          role: "staff",
-          approved: false
+          uid: u.uid,
+          name: u.displayName,
+          email: u.email,
+          role: role,
+          createdAt: new Date().toISOString()
         });
         localStorage.setItem("users", JSON.stringify(users));
       }
