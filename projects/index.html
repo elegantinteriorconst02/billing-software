@@ -1,1 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Projects</title>
+
+<link rel="stylesheet" href="../assets/menu.css">
+
+<style>
+.main{padding:20px}
+.card{
+  background:#fff;
+  padding:16px;
+  border-radius:12px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  margin-bottom:12px;
+}
+.badge{
+  padding:4px 8px;
+  border-radius:12px;
+  font-size:12px;
+}
+.running{background:#dcfce7;color:#166534}
+.pending{background:#fef9c3;color:#854d0e}
+.closed{background:#fee2e2;color:#991b1b}
+</style>
+</head>
+
+<body>
+
+<div id="menuContainer"></div>
+
+<div class="main">
+  <h2>📁 Projects</h2>
+
+  <div id="projectList"></div>
+
+  <button onclick="createProject()">➕ New Project</button>
+</div>
+
+<script src="../shared/menu.js"></script>
+<script>
+fetch("../shared/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menuContainer.innerHTML=h;
+    initMenu();
+  });
+</script>
+
+<script src="data/projects-data.js"></script>
+<script src="project.js"></script>
+
+</body>
+</html>
 
