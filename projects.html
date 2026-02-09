@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Projects</title>
+
+<link rel="stylesheet" href="assets/menu.css">
+
+<style>
+.main{padding:20px}
+.card{
+  background:#fff;
+  padding:16px;
+  border-radius:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.1);
+  margin-bottom:20px;
+}
+input,select,button{
+  padding:8px;margin-bottom:8px;width:100%;
+}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:8px}
+th{background:#f1f5f9}
+.status{
+  font-size:12px;
+  padding:3px 8px;
+  border-radius:10px;
+}
+.running{background:#dcfce7;color:#166534}
+.paused{background:#fef3c7;color:#92400e}
+.pending{background:#fee2e2;color:#991b1b}
+.closed{background:#e5e7eb;color:#374151}
+</style>
+</head>
+
+<body>
+
+<div id="menuContainer"></div>
+
+<div class="main">
+<h2>📁 Projects</h2>
+
+<!-- CREATE PROJECT -->
+<div class="card">
+  <h3>➕ New Project</h3>
+  <input id="pName" placeholder="Project Name">
+  <input id="pStart" type="date">
+  <button onclick="addProject()">Create Project</button>
+</div>
+
+<!-- PROJECT LIST -->
+<div class="card">
+  <h3>📋 Project List</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Start</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+</div>
+
+<script src="data/projects.js"></script>
+
+<script>
+function addProject(){
+  if(!pName.value) return alert("Enter project name");
+
+  createProject({
+    name: pName.value,
+    startDate: pStart.value
+  });
+
+  pName.value = "";
+  pStart.value = "";
+  render();
+}
+
+function render(){
+  rows.innerHTML="";
+  getProjects().forEach(p=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><b>${p.name}</b></td>
+      <td><span class="status ${p.status}">${p.status}</span></td>
+      <td>${p.startDate || "-"}</td>
+      <td>
+        <button onclick="openProject('${p.id}')">Open</button>
+      </td>
+    `;
+    rows.appendChild(tr);
+  });
+}
+
+function openProject(id){
+  location.href = "project-view.html?id=" + id;
+}
+
+render();
+</script>
+
+<script src="shared/menu.js"></script>
+<script>
+fetch("shared/menu.html")
+  .then(r=>r.text())
+  .then(h=>{menuContainer.innerHTML=h;initMenu();});
+</script>
+
+</body>
+</html>
