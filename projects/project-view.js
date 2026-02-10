@@ -1,3 +1,14 @@
+
+projectStatus.value = project.status || "running";
+
+function updateStatus(val){
+  project.status = val;
+  saveProject(project);
+  status.innerText = val;
+}
+
+
+
 const id = new URLSearchParams(location.search).get("id");
 let project = getProject(id);
 
