@@ -1,3 +1,7 @@
-function uid(){
-  return "p_" + Date.now();
+function setProjectStatus(id, status){
+  updateProject(id, p => p.status = status);
+}
+
+function getAllProjects(){
+  return loadProjects();
 }
