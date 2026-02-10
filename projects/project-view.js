@@ -1,89 +1,44 @@
+const pid=new URLSearchParams(location.search).get("id");
+let type="in";
 
-projectStatus.value = project.status || "running";
-
-function updateStatus(val){
-  project.status = val;
-  saveProject(project);
-  status.innerText = val;
+function openTxn(t){
+  type=t;
+  txnBox.style.display="block";
+  date.value=new Date().toISOString().slice(0,10);
+  time.value=new Date().toTimeString().slice(0,5);
 }
 
-
-
-const id = new URLSearchParams(location.search).get("id");
-let project = getProject(id);
-
-if(!project){
-  alert("Project not found");
-  location.href="project-list.html";
+function saveTxn(){
+  addTxn(pid,{
+    type,
+    amount:Number(amt.value),
+    note:note.value,
+    date:date.value,
+    time:time.value
+  });
+  txnBox.style.display="none";
+  render();
 }
 
-project.entries = project.entries || [];
-
-projectName.innerText = project.name;
-status.innerText = project.status || "running";
-
-let type = "in";
+function updateStatus(){
+  setProjectStatus(pid,status.value);
+}
 
 function render(){
- ledger.innerHTML += `
-  <div class="entry">
-    <div><b>${new Date(e.time).toLocaleString()}</b></div>
+  const p=getProject(pid);
+  title.innerText=p.name;
+  status.value=p.status;
 
-    <div class="${e.type==='in'?'green':'red'}">
-      ₹ ${e.amount}
-    </div>
-
-    <div class="badge">
-      ${e.category.toUpperCase()}
-      ${e.party ? " • " + e.party : ""}
-      • ${e.mode}
-    </div>
-
-    <div>${e.note||""}</div>
-
-    ${e.attach?`<div class="attach"><img src="${e.attach}"></div>`:""}
-
-    <div class="badge">Balance: ₹ ${balance}</div>
-  </div>
-    `;
+  ledger.innerHTML="";
+  p.transactions.forEach(t=>{
+    ledger.innerHTML+=`
+      <li class="${t.type}">
+        ${t.date} ${t.time} —
+        ${t.type==="in"?"＋":"−"}₹${t.amount}
+        (${t.note||""})
+      </li>`;
   });
+
+  bal.innerText=projectBalance(p);
 }
-
-function openForm(t){
-  type = t;
-  form.style.display="block";
-}
-
-function saveEntry(){
-  if(project.status==="closed"){
-    alert("Project is closed");
-    return;
-  }
-
-  const reader = new FileReader();
-  const file = document.getElementById("file").files[0];
-
-  reader.onload = ()=>{
-    project.entries.push({
-      id: crypto.randomUUID(),
-      type: entryType.value,
-      category: category.value,
-      party: party.value,
-      amount: +amount.value,
-      mode: mode.value,
-      note: note.value,
-      time: Date.now(),
-      attach: reader.result || null
-    });
-
-    saveProject(project);
-    form.style.display="none";
-    render();
-  };
-
-  if(file) reader.readAsDataURL(file);
-  else reader.onload();
-}
-
-
 render();
