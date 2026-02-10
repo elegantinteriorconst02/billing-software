@@ -2,86 +2,55 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Project Ledger</title>
+<title>Project</title>
 <link rel="stylesheet" href="../assets/menu.css">
-  
-<div style="margin-bottom:10px">
-  <select id="projectStatus" onchange="updateStatus(this.value)">
-    <option value="running">🟢 Running</option>
-    <option value="paused">⏸ Paused</option>
-    <option value="closed">🔴 Closed</option>
-  </select>
-</div>
-
 <style>
-.main{padding:20px;max-width:700px}
-.entry{border-bottom:1px solid #eee;padding:10px 0}
-.green{color:#16a34a;font-weight:bold}
-.red{color:#dc2626;font-weight:bold}
-.badge{font-size:12px;padding:2px 6px;border-radius:6px;background:#eef}
-.attach img{max-width:120px;border:1px solid #ccc;margin-top:6px}
-.actions{display:flex;gap:10px;margin:15px 0}
-button{padding:12px 18px;border:none;border-radius:12px;font-size:15px}
-.in{background:#16a34a;color:#fff}
-.out{background:#dc2626;color:#fff}
+.main{padding:20px}
+.in{color:green} .out{color:red}
 </style>
 </head>
-
 <body>
 
 <div id="menuContainer"></div>
 
 <div class="main">
+<h2 id="title"></h2>
 
-<h2 id="projectName">📁 Project</h2>
-<p>Status: <span id="status"></span></p>
+<select id="status" onchange="updateStatus()">
+<option>running</option>
+<option>paused</option>
+<option>closed</option>
+</select>
 
-<div id="ledger"></div>
+<hr>
 
-<div class="actions">
-  <button class="in" onclick="openForm('in')">＋ CASH IN</button>
-  <button class="out" onclick="openForm('out')">－ CASH OUT</button>
+<button onclick="openTxn('in')" style="background:#16a34a">+ Cash In</button>
+<button onclick="openTxn('out')" style="background:#dc2626">− Cash Out</button>
+
+<h3>Ledger</h3>
+<ul id="ledger"></ul>
+
+<h3>Total Balance: ₹ <span id="bal">0</span></h3>
 </div>
 
-<!-- ENTRY FORM -->
-<div id="form" style="display:none">
-
-  <select id="entryType">
-    <option value="in">Cash In</option>
-    <option value="out">Cash Out</option>
-  </select>
-
-  <select id="category">
-    <option value="misc">General</option>
-    <option value="vendor">Vendor Expense</option>
-    <option value="client">Client Advance</option>
-  </select>
-
-  <input id="party" placeholder="Vendor / Client name">
-
-  <select id="mode">
-    <option>Cash</option>
-    <option>UPI</option>
-    <option>Bank</option>
-  </select>
-
-  <input id="amount" type="number" placeholder="Amount">
-  <input id="note" placeholder="Note">
-  <input id="file" type="file" accept="image/*">
-
-  <button onclick="saveEntry()">Save Entry</button>
+<div id="txnBox" style="display:none">
+<input id="amt" type="number" placeholder="Amount">
+<input id="note" placeholder="Note">
+<input id="date" type="date">
+<input id="time" type="time">
+<button onclick="saveTxn()">Save</button>
 </div>
-</div>
+
 <script src="data/projects.store.js"></script>
+<script src="project.js"></script>
+<script src="project-transactions.js"></script>
 <script src="project-view.js"></script>
 
 <script src="../shared/menu.js"></script>
 <script>
 fetch("../shared/menu.html").then(r=>r.text()).then(h=>{
-  menuContainer.innerHTML=h;
-  initMenu();
+  menuContainer.innerHTML=h;initMenu();
 });
 </script>
-
 </body>
 </html>
