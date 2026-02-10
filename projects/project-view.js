@@ -1,44 +1,50 @@
-const pid=new URLSearchParams(location.search).get("id");
-let type="in";
+const pid = new URLSearchParams(location.search).get("id");
+const projects = getProjects();
+const project = projects.find(p=>p.id===pid);
+let balance = 0;
 
-function openTxn(t){
-  type=t;
-  txnBox.style.display="block";
-  date.value=new Date().toISOString().slice(0,10);
-  time.value=new Date().toTimeString().slice(0,5);
-}
+status.value = project.status;
 
-function saveTxn(){
-  addTxn(pid,{
-    type,
-    amount:Number(amt.value),
-    note:note.value,
-    date:date.value,
-    time:time.value
-  });
-  txnBox.style.display="none";
-  render();
-}
-
-function updateStatus(){
-  setProjectStatus(pid,status.value);
-}
-
-function render(){
-  const p=getProject(pid);
-  title.innerText=p.name;
-  status.value=p.status;
-
+function renderLedger(){
   ledger.innerHTML="";
-  p.transactions.forEach(t=>{
-    ledger.innerHTML+=`
-      <li class="${t.type}">
-        ${t.date} ${t.time} —
-        ${t.type==="in"?"＋":"−"}₹${t.amount}
-        (${t.note||""})
-      </li>`;
+  balance = 0;
+
+  project.ledger.forEach(l=>{
+    if(l.type==="in") balance += l.amount;
+    else balance -= l.amount;
+
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${l.time}</td>
+      <td>${l.note}</td>
+      <td>${l.type==="in"?l.amount:""}</td>
+      <td>${l.type==="out"?l.amount:""}</td>
+      <td>${balance}</td>
+    `;
+    ledger.appendChild(tr);
+  });
+}
+
+function openForm(type){
+  const amount = Number(prompt("Amount"));
+  const note   = prompt("Note");
+  const time   = prompt("Date & time", new Date().toISOString().slice(0,16));
+
+  project.ledger.push({
+    id:"t_"+Date.now(),
+    type,
+    amount,
+    note,
+    time
   });
 
-  bal.innerText=projectBalance(p);
+  saveProjects(projects);
+  renderLedger();
 }
-render();
+
+function changeStatus(s){
+  project.status=s;
+  saveProjects(projects);
+}
+
+renderLedger();
