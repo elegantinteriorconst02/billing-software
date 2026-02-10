@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <title>Project Ledger</title>
 <link rel="stylesheet" href="../assets/menu.css">
+  
+<div style="margin-bottom:10px">
+  <select id="projectStatus" onchange="updateStatus(this.value)">
+    <option value="running">🟢 Running</option>
+    <option value="paused">⏸ Paused</option>
+    <option value="closed">🔴 Closed</option>
+  </select>
+</div>
 
 <style>
 .main{padding:20px;max-width:700px}
