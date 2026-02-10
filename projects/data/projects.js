@@ -1,6 +1,19 @@
+const KEY = "projects";
+
 function getProjects(){
-  return JSON.parse(localStorage.getItem("projects")||"[]");
+  return JSON.parse(localStorage.getItem(KEY) || "[]");
 }
-function saveProjects(p){
-  localStorage.setItem("projects",JSON.stringify(p));
+
+function saveProjects(data){
+  localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+function addProject(p){
+  const list = getProjects();
+  list.push(p);
+  saveProjects(list);
+}
+
+function getProjectById(id){
+  return getProjects().find(p => p.id === id);
 }
