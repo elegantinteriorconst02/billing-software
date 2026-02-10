@@ -3,66 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <title>Projects</title>
-
 <link rel="stylesheet" href="../assets/menu.css">
-
 <style>
 .main{padding:20px}
-table{width:100%;border-collapse:collapse}
-th,td{border:1px solid #ccc;padding:8px}
-th{background:#eee}
-input,select,button{padding:6px}
+input,select,button{padding:6px;margin-right:6px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ccc;padding:6px}
 </style>
 </head>
 
 <body>
-
 <div id="menuContainer"></div>
 
 <div class="main">
 <h2>📁 Projects</h2>
 
-<input id="projectName" placeholder="Project name">
-<input id="projectClient" placeholder="Client name">
-<button onclick="addNewProject()">➕ Add Project</button>
-
-<br><br>
-
-<select id="statusFilter" onchange="renderProjects()">
-  <option value="">All</option>
-  <option value="running">Running</option>
-  <option value="pending">Pending</option>
-  <option value="closed">Closed</option>
-</select>
+<input id="pname" placeholder="Project name">
+<input id="client" placeholder="Client name">
+<button onclick="add()">➕ Add Project</button>
 
 <table>
 <thead>
 <tr>
-  <th>Name</th>
-  <th>Client</th>
-  <th>Status</th>
-  <th>Action</th>
+<th>Name</th><th>Client</th><th>Status</th><th>Action</th>
 </tr>
 </thead>
-<tbody id="projectRows"></tbody>
+<tbody id="rows"></tbody>
 </table>
 </div>
 
-<script src="data/project-store.js"></script>
-<script src="project-service.js"></script>
-<script src="project-ui.js"></script>
+<script src="data/projects.js"></script>
+<script src="project.js"></script>
+<script>
+function render(){
+  rows.innerHTML="";
+  getProjects().forEach(p=>{
+    rows.innerHTML += `
+      <tr>
+        <td>${p.name}</td>
+        <td>${p.client}</td>
+        <td>${p.status}</td>
+        <td>
+          <button onclick="openP('${p.id}')">View</button>
+        </td>
+      </tr>`;
+  });
+}
+
+function add(){
+  if(!pname.value) return alert("Project name required");
+  addProject({
+    id:uid(),
+    name:pname.value,
+    client:client.value,
+    status:"running",
+    entries:[]
+  });
+  pname.value=""; client.value="";
+  render();
+}
+
+function openP(id){
+  location.href="project-view.html?id="+id;
+}
+
+render();
+</script>
 
 <script src="../shared/menu.js"></script>
 <script>
-fetch("../shared/menu.html")
- .then(r=>r.text())
- .then(h=>{
-   menuContainer.innerHTML=h;
-   initMenu();
-   renderProjects();
- });
+fetch("../shared/menu.html").then(r=>r.text()).then(h=>{
+  menuContainer.innerHTML=h; initMenu();
+});
 </script>
-
 </body>
 </html>
-
