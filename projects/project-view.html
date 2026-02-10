@@ -2,78 +2,103 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Project Details</title>
+<title>Project</title>
 <link rel="stylesheet" href="../assets/menu.css">
 <style>
 .main{padding:20px}
-.card{border:1px solid #ccc;padding:12px;margin-bottom:12px}
+.card{border:1px solid #ccc;padding:10px;margin-bottom:10px}
 table{width:100%;border-collapse:collapse}
 th,td{border:1px solid #ccc;padding:6px}
 </style>
 </head>
 
 <body>
-
 <div id="menuContainer"></div>
 
 <div class="main">
-  <h2 id="projectTitle">📁 Project</h2>
+<h2 id="title"></h2>
 
-  <!-- PROJECT INFO -->
-  <div class="card">
-    <h3>Project Info</h3>
-    <p><b>Client:</b> <span id="clientName"></span></p>
-    <p><b>Status:</b> <span id="status"></span></p>
-  </div>
-
-  <!-- SUMMARY -->
-  <div class="card">
-    <h3>Summary</h3>
-    <p>Income: ₹ <span id="income">0</span></p>
-    <p>Expense: ₹ <span id="expense">0</span></p>
-    <p><b>Balance:</b> ₹ <span id="balance">0</span></p>
-  </div>
-
-  <!-- TRANSACTIONS -->
-  <div class="card">
-    <h3>Add Entry</h3>
-    <select id="type">
-      <option value="income">Income</option>
-      <option value="expense">Expense</option>
-    </select>
-    <input id="amount" type="number" placeholder="Amount">
-    <input id="note" placeholder="Note">
-    <button onclick="addEntry()">Add</button>
-  </div>
-
-  <div class="card">
-    <h3>Ledger</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Type</th>
-          <th>Amount</th>
-          <th>Note</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </div>
+<div class="card">
+<b>Client:</b> <span id="client"></span><br>
+<b>Status:</b> <span id="status"></span>
 </div>
 
-<script src="project.js"></script>
-<script src="project-transactions.js"></script>
+<div class="card">
+<h3>Add Transaction</h3>
+<select id="type">
+  <option value="income">Income</option>
+  <option value="expense">Expense</option>
+</select>
+<input id="amount" type="number" placeholder="Amount">
+<input id="note" placeholder="Note">
+<button onclick="addTx()">Add</button>
+</div>
+
+<div class="card">
+<h3>Summary</h3>
+Income: ₹ <span id="inc">0</span><br>
+Expense: ₹ <span id="exp">0</span><br>
+<b>Balance: ₹ <span id="bal">0</span></b>
+</div>
+
+<div class="card">
+<h3>Ledger</h3>
+<table>
+<thead>
+<tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th></tr>
+</thead>
+<tbody id="ledger"></tbody>
+</table>
+</div>
+</div>
+
+<script src="data/projects.js"></script>
+<script>
+const id = new URLSearchParams(location.search).get("id");
+const list = getProjects();
+const p = list.find(x=>x.id===id);
+
+title.innerText = "📁 " + p.name;
+client.innerText = p.client || "-";
+status.innerText = p.status;
+
+function render(){
+  let i=0,e=0;
+  ledger.innerHTML="";
+  p.entries.forEach(t=>{
+    t.type==="income" ? i+=t.amount : e+=t.amount;
+    ledger.innerHTML += `
+    <tr>
+      <td>${t.date}</td>
+      <td>${t.type}</td>
+      <td>${t.amount}</td>
+      <td>${t.note}</td>
+    </tr>`;
+  });
+  inc.innerText=i; exp.innerText=e; bal.innerText=i-e;
+}
+
+function addTx(){
+  if(!amount.value) return alert("Amount needed");
+  p.entries.push({
+    type:type.value,
+    amount:+amount.value,
+    note:note.value,
+    date:new Date().toLocaleDateString()
+  });
+  saveProjects(list);
+  amount.value=""; note.value="";
+  render();
+}
+
+render();
+</script>
 
 <script src="../shared/menu.js"></script>
 <script>
-fetch("../shared/menu.html")
-.then(r=>r.text())
-.then(h=>{
-  menuContainer.innerHTML=h;
-  initMenu();
+fetch("../shared/menu.html").then(r=>r.text()).then(h=>{
+  menuContainer.innerHTML=h; initMenu();
 });
 </script>
-
 </body>
 </html>
