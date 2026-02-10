@@ -16,17 +16,30 @@
 <div class="main">
 <h2 id="title"></h2>
 
-<select id="status" onchange="updateStatus()">
-<option>running</option>
-<option>paused</option>
-<option>closed</option>
+<select id="status" onchange="changeStatus(this.value)">
+  <option value="running">Running</option>
+  <option value="pause">Paused</option>
+  <option value="closed">Closed</option>
 </select>
-
 <hr>
 
-<button onclick="openTxn('in')" style="background:#16a34a">+ Cash In</button>
-<button onclick="openTxn('out')" style="background:#dc2626">− Cash Out</button>
+<button onclick="openForm('in')" style="background:green">+ CASH IN</button>
+<button onclick="openForm('out')" style="background:red">- CASH OUT</button>
+<table>
+<thead>
+<tr>
+  <th>Date</th>
+  <th>Note</th>
+  <th>In</th>
+  <th>Out</th>
+  <th>Balance</th>
+</tr>
+</thead>
+<tbody id="ledger"></tbody>
+</table>
 
+
+  
 <h3>Ledger</h3>
 <ul id="ledger"></ul>
 
@@ -41,6 +54,8 @@
 <button onclick="saveTxn()">Save</button>
 </div>
 
+<script src="data/project-store.js"></script>
+<script src="project-view.js"></script>
 <script src="data/projects.store.js"></script>
 <script src="project.js"></script>
 <script src="project-transactions.js"></script>
