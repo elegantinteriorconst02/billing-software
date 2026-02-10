@@ -2,163 +2,65 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Project</title>
+<title>Project Ledger</title>
 <link rel="stylesheet" href="../assets/menu.css">
+
 <style>
-.main{padding:20px}
-.card{border:1px solid #ccc;padding:12px;margin-bottom:12px}
-input,select,button{padding:6px;margin-right:6px}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:6px}
-.badge{padding:2px 8px;border-radius:6px;font-size:12px}
-.running{background:#dcfce7}
-.paused{background:#fef9c3}
-.closed{background:#fee2e2}
+.main{padding:20px;max-width:700px}
+.entry{border-bottom:1px solid #eee;padding:10px 0}
+.green{color:#16a34a;font-weight:bold}
+.red{color:#dc2626;font-weight:bold}
+.badge{font-size:12px;padding:2px 6px;border-radius:6px;background:#eef}
+.attach img{max-width:120px;border:1px solid #ccc;margin-top:6px}
+.actions{display:flex;gap:10px;margin:15px 0}
+button{padding:12px 18px;border:none;border-radius:12px;font-size:15px}
+.in{background:#16a34a;color:#fff}
+.out{background:#dc2626;color:#fff}
 </style>
 </head>
 
 <body>
+
 <div id="menuContainer"></div>
 
 <div class="main">
 
-<h2 id="title"></h2>
+<h2 id="projectName">📁 Project</h2>
+<p>Status: <span id="status"></span></p>
 
-<div class="card">
-<b>Client:</b> <span id="client"></span><br>
-<b>Status:</b>
-<span id="statusBadge" class="badge"></span>
-<br><br>
+<div id="ledger"></div>
 
-<button onclick="setStatus('running')">▶ Running</button>
-<button onclick="setStatus('paused')">⏸ Pause</button>
-<button onclick="setStatus('closed')">⛔ Close</button>
+<div class="actions">
+  <button class="in" onclick="openForm('in')">＋ CASH IN</button>
+  <button class="out" onclick="openForm('out')">－ CASH OUT</button>
 </div>
 
-<div class="card" id="txBox">
-<h3>Add Entry</h3>
+<!-- ENTRY FORM -->
+<div id="form" style="display:none">
+  <select id="mode">
+    <option>Cash</option>
+    <option>UPI</option>
+    <option>Bank</option>
+  </select>
 
-<select id="type">
-  <option value="income">Client Payment</option>
-  <option value="expense">Vendor Expense</option>
-</select>
+  <input id="amount" type="number" placeholder="Amount">
+  <input id="note" placeholder="Note">
+  <input id="file" type="file" accept="image/*">
 
-<input id="amount" type="number" placeholder="Amount">
-
-<input id="party" placeholder="Client / Vendor name">
-
-<select id="mode">
-  <option>Cash</option>
-  <option>UPI</option>
-  <option>Bank</option>
-</select>
-
-<input id="note" placeholder="Note">
-
-<button onclick="addTx()">Add</button>
-</div>
-
-<div class="card">
-<h3>Summary</h3>
-Income: ₹ <span id="inc">0</span><br>
-Expense: ₹ <span id="exp">0</span><br>
-<b>Balance: ₹ <span id="bal">0</span></b>
-</div>
-
-<div class="card">
-<h3>Ledger</h3>
-<table>
-<thead>
-<tr>
-<th>Date</th><th>Type</th><th>Party</th>
-<th>Mode</th><th>Amount</th><th>Note</th>
-</tr>
-</thead>
-<tbody id="ledger"></tbody>
-</table>
+  <button onclick="saveEntry()">Save</button>
 </div>
 
 </div>
 
-<script src="data/projects.js"></script>
-
-<script>
-const id = new URLSearchParams(location.search).get("id");
-const list = getProjects();
-const p = list.find(x=>x.id===id);
-
-title.innerText = "📁 " + p.name;
-client.innerText = p.client || "-";
-
-function refreshStatus(){
-  statusBadge.innerText = p.status;
-  statusBadge.className = "badge " + p.status;
-
-  if(p.status==="closed"){
-    txBox.style.display="none";
-  }
-}
-refreshStatus();
-
-function setStatus(s){
-  p.status = s;
-  saveProjects(list);
-  refreshStatus();
-}
-
-/* ===== RENDER ===== */
-function render(){
-  let i=0,e=0;
-  ledger.innerHTML="";
-
-  p.entries.forEach(t=>{
-    t.type==="income" ? i+=t.amount : e+=t.amount;
-    ledger.innerHTML+=`
-    <tr>
-      <td>${t.date}</td>
-      <td>${t.type}</td>
-      <td>${t.party||"-"}</td>
-      <td>${t.mode||"-"}</td>
-      <td>${t.amount}</td>
-      <td>${t.note||""}</td>
-    </tr>`;
-  });
-
-  inc.innerText=i;
-  exp.innerText=e;
-  bal.innerText=i-e;
-}
-
-/* ===== ADD ENTRY ===== */
-function addTx(){
-  if(p.status==="closed"){
-    return alert("Project closed");
-  }
-
-  if(!amount.value) return alert("Amount required");
-
-  p.entries.push({
-    type:type.value,
-    amount:+amount.value,
-    party:party.value,
-    mode:mode.value,
-    note:note.value,
-    date:new Date().toLocaleDateString()
-  });
-
-  saveProjects(list);
-  amount.value=""; party.value=""; note.value="";
-  render();
-}
-
-render();
-</script>
+<script src="data/projects.store.js"></script>
+<script src="project-view.js"></script>
 
 <script src="../shared/menu.js"></script>
 <script>
-fetch("../shared/menu.html")
-.then(r=>r.text())
-.then(h=>{menuContainer.innerHTML=h;initMenu();});
+fetch("../shared/menu.html").then(r=>r.text()).then(h=>{
+  menuContainer.innerHTML=h;
+  initMenu();
+});
 </script>
 
 </body>
