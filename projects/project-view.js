@@ -25,22 +25,26 @@ status.innerText = project.status || "running";
 let type = "in";
 
 function render(){
-  ledger.innerHTML="";
-  let balance = 0;
+ ledger.innerHTML += `
+  <div class="entry">
+    <div><b>${new Date(e.time).toLocaleString()}</b></div>
 
-  project.entries.forEach(e=>{
-    balance += e.type==="in" ? e.amount : -e.amount;
+    <div class="${e.type==='in'?'green':'red'}">
+      ₹ ${e.amount}
+    </div>
 
-    ledger.innerHTML += `
-      <div class="entry">
-        <div><b>${new Date(e.time).toLocaleString()}</b></div>
-        <div class="${e.type==='in'?'green':'red'}">
-          ₹ ${e.amount} (${e.type})
-        </div>
-        <div>${e.mode} · ${e.note||""}</div>
-        ${e.attach?`<div class="attach"><img src="${e.attach}"></div>`:""}
-        <div class="badge">Balance: ₹ ${balance}</div>
-      </div>
+    <div class="badge">
+      ${e.category.toUpperCase()}
+      ${e.party ? " • " + e.party : ""}
+      • ${e.mode}
+    </div>
+
+    <div>${e.note||""}</div>
+
+    ${e.attach?`<div class="attach"><img src="${e.attach}"></div>`:""}
+
+    <div class="badge">Balance: ₹ ${balance}</div>
+  </div>
     `;
   });
 }
@@ -51,18 +55,27 @@ function openForm(t){
 }
 
 function saveEntry(){
-  const file = fileInput = document.getElementById("file").files[0];
+  if(project.status==="closed"){
+    alert("Project is closed");
+    return;
+  }
+
   const reader = new FileReader();
+  const file = document.getElementById("file").files[0];
 
   reader.onload = ()=>{
     project.entries.push({
-      type,
+      id: crypto.randomUUID(),
+      type: entryType.value,
+      category: category.value,
+      party: party.value,
       amount: +amount.value,
       mode: mode.value,
       note: note.value,
       time: Date.now(),
       attach: reader.result || null
     });
+
     saveProject(project);
     form.style.display="none";
     render();
@@ -71,5 +84,6 @@ function saveEntry(){
   if(file) reader.readAsDataURL(file);
   else reader.onload();
 }
+
 
 render();
