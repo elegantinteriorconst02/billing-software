@@ -1,1 +1,3 @@
-/project-core.js
+function uid(){
+  return "p_" + Date.now();
+}
