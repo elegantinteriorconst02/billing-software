@@ -1,21 +1,33 @@
-const STORE_KEY = "projects-data";
+const PROJECT_KEY = "projects";
 
-function getProjects(){
-  return JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+function loadProjects(){
+  return JSON.parse(localStorage.getItem(PROJECT_KEY) || "[]");
 }
 
 function saveProjects(list){
-  localStorage.setItem(STORE_KEY, JSON.stringify(list));
+  localStorage.setItem(PROJECT_KEY, JSON.stringify(list));
+}
+
+function createProject(data){
+  const list = loadProjects();
+  list.push({
+    id: "p_" + Date.now(),
+    name: data.name,
+    client: data.client,
+    status: "running",
+    createdAt: new Date().toISOString(),
+    transactions: []
+  });
+  saveProjects(list);
 }
 
 function getProject(id){
-  return getProjects().find(p => p.id === id);
+  return loadProjects().find(p => p.id === id);
 }
 
-function saveProject(project){
-  const list = getProjects();
-  const i = list.findIndex(p => p.id === project.id);
-  if(i >= 0) list[i] = project;
-  else list.push(project);
+function updateProject(id, updater){
+  const list = loadProjects();
+  const p = list.find(x => x.id === id);
+  if(p) updater(p);
   saveProjects(list);
 }
