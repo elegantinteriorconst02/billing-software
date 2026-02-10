@@ -6,60 +6,50 @@
 <link rel="stylesheet" href="../assets/menu.css">
 <style>
 .main{padding:20px}
-input,select,button{padding:6px;margin-right:6px}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:6px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ccc;padding:8px}
 </style>
 </head>
-
 <body>
+
 <div id="menuContainer"></div>
 
 <div class="main">
 <h2>📁 Projects</h2>
 
-<input id="pname" placeholder="Project name">
-<input id="client" placeholder="Client name">
-<button onclick="add()">➕ Add Project</button>
+<input id="pName" placeholder="Project name">
+<input id="pClient" placeholder="Client name">
+<button onclick="addProject()">➕ Add</button>
 
 <table>
 <thead>
-<tr>
-<th>Name</th><th>Client</th><th>Status</th><th>Action</th>
-</tr>
+<tr><th>Name</th><th>Client</th><th>Status</th><th></th></tr>
 </thead>
 <tbody id="rows"></tbody>
 </table>
 </div>
 
-<script src="data/projects.js"></script>
+<script src="data/projects.store.js"></script>
 <script src="project.js"></script>
+
 <script>
 function render(){
   rows.innerHTML="";
-  getProjects().forEach(p=>{
-    rows.innerHTML += `
+  getAllProjects().forEach(p=>{
+    rows.innerHTML+=`
       <tr>
         <td>${p.name}</td>
-        <td>${p.client}</td>
+        <td>${p.client||"-"}</td>
         <td>${p.status}</td>
-        <td>
-          <button onclick="openP('${p.id}')">View</button>
-        </td>
+        <td><button onclick="openP('${p.id}')">View</button></td>
       </tr>`;
   });
 }
 
-function add(){
-  if(!pname.value) return alert("Project name required");
-  addProject({
-    id:uid(),
-    name:pname.value,
-    client:client.value,
-    status:"running",
-    entries:[]
-  });
-  pname.value=""; client.value="";
+function addProject(){
+  if(!pName.value) return alert("Name required");
+  createProject({name:pName.value, client:pClient.value});
+  pName.value=""; pClient.value="";
   render();
 }
 
@@ -73,8 +63,9 @@ render();
 <script src="../shared/menu.js"></script>
 <script>
 fetch("../shared/menu.html").then(r=>r.text()).then(h=>{
-  menuContainer.innerHTML=h; initMenu();
+  menuContainer.innerHTML=h;initMenu();
 });
 </script>
+
 </body>
 </html>
