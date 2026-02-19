@@ -1,6 +1,15 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+import { initializeApp } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+
+import { getAuth } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import { getStorage } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+import { getFirestore } 
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyAJliCUJkElsPwbJUGrTUmB7EPyiGaCniQ",
@@ -10,6 +19,7 @@ const firebaseConfig = {
   messagingSenderId: "376103136888",
   appId: "1:376103136888:web:ae1ab4d7195037a529478d"
 };
+
 
 const app = initializeApp(firebaseConfig);
 
