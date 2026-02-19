@@ -1,50 +1,85 @@
-/**
- * Data Management Logic for Clients
- * Storage: LocalStorage (Key: 'clients')
- */
+import { db, auth } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const STORAGE_KEY = 'clients';
 
-// Fetch all clients from localStorage
-function getClients() {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+/* =========================
+   GET ALL CLIENTS
+========================= */
+export async function getClients() {
+  const user = auth.currentUser;
+  if (!user) return [];
+
+  const q = query(
+    collection(db, "clients"),
+    where("uid", "==", user.uid)
+  );
+
+  const snap = await getDocs(q);
+
+  return snap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }));
 }
 
-// Get a single client by ID
-function getClientById(id) {
-    const clients = getClients();
-    return clients.find(c => c.id === id);
+
+/* =========================
+   GET SINGLE CLIENT
+========================= */
+export async function getClientById(id) {
+  const list = await getClients();
+  return list.find(c => c.id === id);
 }
 
-// Save a new client (creates ID automatically)
-function saveClient(client) {
-    const clients = getClients();
-    
-    // Generate simple ID: CL-Timestamp
-    client.id = `CL-${Date.now()}`;
-    
-    clients.push(client);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
-    return client;
+
+/* =========================
+   SAVE CLIENT
+========================= */
+export async function saveClient(client) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  await addDoc(collection(db, "clients"), {
+    ...client,
+    uid: user.uid,
+    createdAt: new Date()
+  });
 }
 
-// Update an existing client
-function updateClient(updatedClient) {
-    let clients = getClients();
-    clients = clients.map(c => c.id === updatedClient.id ? updatedClient : c);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
+
+/* =========================
+   UPDATE CLIENT
+========================= */
+export async function updateClient(client) {
+
+  const clientRef = doc(db, "clients", client.id);
+
+  await updateDoc(clientRef, {
+    name: client.name,
+    mobile: client.mobile,
+    email: client.email,
+    gst: client.gst,
+    state: client.state,
+    pin: client.pin,
+    address: client.address,
+    notes: client.notes,
+    updatedAt: new Date()
+  });
 }
 
-// Delete client by ID
-function deleteClient(id){
-  const clients = getClients();
-  const client = clients.find(c => c.id === id);
-  if(!client) return;
 
-  // 👉 recycle bin-এ পাঠানো
-  moveToRecycleBin("client", client);
-
-  const updated = clients.filter(c => c.id !== id);
-  localStorage.setItem("clients", JSON.stringify(updated));
+/* =========================
+   DELETE CLIENT
+========================= */
+export async function deleteClient(id){
+  await deleteDoc(doc(db, "clients", id));
 }
