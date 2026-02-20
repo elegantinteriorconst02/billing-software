@@ -191,19 +191,34 @@ th{background:#f1f3f9}
 </div>
 </div>
 
-<!-- DATA -->
-<script src="../data/vendor.js"></script>
-<script src="../data/vendor-items.js"></script>
 
-<script>
+
+<!-- DATA -->
+   
+<script type="module">
+
+import {
+  getVendors,
+  saveVendor,
+  getVendor,
+  deleteVendor
+} from "../data/vendor.js";
+
+import {
+  getItemsByVendor,
+  saveVendorItem,
+  deleteVendorItem
+} from "../data/vendor-items.js";
+
 const vendorSelect = document.getElementById("vendorSelect");
 const vendorTable  = document.getElementById("vendorTable");
 const itemTable    = document.getElementById("itemTable");
 
 /* LOAD VENDORS */
-function loadVendors(){
+async function loadVendors(){
   vendorSelect.innerHTML = "<option value=''>-- Select Vendor --</option>";
-  getVendors().forEach(v=>{
+  const vendors = await getVendors();
+  vendors.forEach(v=>{
     const o = document.createElement("option");
     o.value = v.id;
     o.textContent = v.name;
@@ -211,26 +226,29 @@ function loadVendors(){
   });
 }
 
-function renderVendorTable(){
+/* TABLE */
+async function renderVendorTable(){
   vendorTable.innerHTML = "";
-  getVendors().forEach(v=>{
+  const vendors = await getVendors();
+  vendors.forEach(v=>{
     vendorTable.innerHTML += `
       <tr>
         <td><b>${v.name}</b></td>
         <td>${v.phone||""}</td>
         <td>${v.gst||"-"}</td>
         <td>
-          <button onclick="editVendor('${v.id}')">✏</button>
-          <button style="background:#dc3545" onclick="deleteVendorUI('${v.id}')">🗑</button>
+          <button onclick="window.editVendor('${v.id}')">✏</button>
+          <button style="background:#dc3545" onclick="window.deleteVendorUI('${v.id}')">🗑</button>
         </td>
       </tr>
     `;
   });
 }
 
-function editVendor(id){
-  const v = getVendor(id);
+window.editVendor = async function(id){
+  const v = await getVendor(id);
   if(!v) return;
+
   vendorSelect.value = v.id;
   vName.value = v.name||"";
   vPhone.value = v.phone||"";
@@ -241,21 +259,21 @@ function editVendor(id){
   vAddress.value = v.address||"";
   vRemarks.value = v.remarks||"";
   loadItems();
-}
+};
 
-function deleteVendorUI(id){
+window.deleteVendorUI = async function(id){
   if(confirm("Delete this vendor?")){
-    deleteVendor(id);
-    loadVendors();
-    renderVendorTable();
+    await deleteVendor(id);
+    await loadVendors();
+    await renderVendorTable();
     itemTable.innerHTML="";
   }
-}
+};
 
-/* ADD / UPDATE */
-function addVendor(){
+window.addVendor = async function(){
   if(!vName.value) return alert("Enter vendor name");
-  saveVendor({
+
+  await saveVendor({
     name:vName.value,
     phone:vPhone.value,
     email:vEmail.value,
@@ -265,54 +283,60 @@ function addVendor(){
     address:vAddress.value,
     remarks:vRemarks.value
   });
-  loadVendors();
-  renderVendorTable();
-}
 
-/* ITEMS */
-function loadItems(){
+  await loadVendors();
+  await renderVendorTable();
+};
+
+async function loadItems(){
   itemTable.innerHTML="";
   if(!vendorSelect.value) return;
-  getItemsByVendor(vendorSelect.value).forEach(i=>{
+
+  const items = await getItemsByVendor(vendorSelect.value);
+
+  items.forEach(i=>{
     itemTable.innerHTML += `
       <tr>
         <td>${i.name}</td>
         <td><span class="badge">${i.uom}</span></td>
         <td>${i.gst}%</td>
         <td class="right">₹ ${i.rate}</td>
-        <td><button onclick="delItem('${i.id}')">✕</button></td>
+        <td><button onclick="window.delItem('${i.id}')">✕</button></td>
       </tr>
     `;
   });
 }
 
-function addItem(){
+window.addItem = async function(){
   if(!vendorSelect.value) return alert("Select vendor first");
-  saveVendorItem({
+
+  await saveVendorItem({
     vendorId: vendorSelect.value,
     name: itemName.value,
     rate:Number(itemRate.value||0),
     gst:Number(itemGst.value||0),
     uom:itemUom.value
   });
+
   itemName.value="";
   itemRate.value="";
   itemGst.value="";
   loadItems();
-}
+};
 
-function delItem(id){
+window.delItem = async function(id){
   if(confirm("Delete item?")){
-    deleteVendorItem(id);
+    await deleteVendorItem(id);
     loadItems();
   }
-}
+};
 
-/* INIT */
-renderVendorTable();
-loadVendors();
+await loadVendors();
+await renderVendorTable();
 vendorSelect.onchange = loadItems;
+
 </script>
+
 
 <!-- MENU -->
 <script src="../shared/menu.js"></script>
