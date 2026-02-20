@@ -201,18 +201,26 @@
 </div>
 
 <!-- DATA -->
-<script src="../data/client.js"></script>
-<script src="../data/recyclebin.js"></script>
 
-<!-- LOGIC -->
-<script>
+<script type="module">
+
+import {
+  getClients,
+  getClientById,
+  saveClient,
+  updateClient,
+  deleteClient
+} from "../data/client.js";
+
 const form = document.getElementById("clientForm");
 const tableBody = document.getElementById("clientTableBody");
 const searchInput = document.getElementById("clientSearch");
 
-window.onload = refreshList;
+window.addEventListener("DOMContentLoaded", async () => {
+  await refreshList();
+});
 
-form.addEventListener("submit", e=>{
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const client = {
@@ -227,42 +235,52 @@ form.addEventListener("submit", e=>{
     notes: notes.value
   };
 
-  client.id ? updateClient(client) : saveClient(client);
+  if (client.id) {
+    await updateClient(client);
+  } else {
+    await saveClient(client);
+  }
+
   resetForm();
-  refreshList();
+  await refreshList();
 });
 
-function refreshList(){
+async function refreshList() {
   const q = (searchInput.value || "").toLowerCase();
   tableBody.innerHTML = "";
 
-  getClients().filter(c =>
-    c.name?.toLowerCase().includes(q) ||
-    c.mobile?.includes(q) ||
-    c.email?.toLowerCase().includes(q) ||
-    c.gst?.toLowerCase().includes(q) ||
-    c.pin?.includes(q)
-  ).forEach(c=>{
-    tableBody.innerHTML += `
-      <tr>
-        <td><b>${c.name}</b></td>
-        <td>${c.mobile||""}</td>
-        <td>${c.gst||"-"}</td>
-        <td>${c.state||""}</td>
-        <td class="actions">
-          <button class="btn-edit" onclick="editEntry('${c.id}')">Edit</button>
-          <button class="btn-delete" onclick="deleteEntry('${c.id}')">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
+  const clients = await getClients();
+
+  clients
+    .filter(c =>
+      c.name?.toLowerCase().includes(q) ||
+      c.mobile?.includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.gst?.toLowerCase().includes(q) ||
+      c.pin?.includes(q)
+    )
+    .forEach(c => {
+      tableBody.innerHTML += `
+        <tr>
+          <td><b>${c.name}</b></td>
+          <td>${c.mobile || ""}</td>
+          <td>${c.gst || "-"}</td>
+          <td>${c.state || ""}</td>
+          <td class="actions">
+            <button onclick="editEntry('${c.id}')">Edit</button>
+            <button onclick="deleteEntry('${c.id}')">Delete</button>
+          </td>
+        </tr>
+      `;
+    });
 }
 
 searchInput.addEventListener("input", refreshList);
 
-function editEntry(id){
-  const c = getClientById(id);
-  if(!c) return;
+window.editEntry = async function(id) {
+  const c = await getClientById(id);
+  if (!c) return;
+
   clientId.value = c.id;
   name.value = c.name;
   mobile.value = c.mobile;
@@ -273,21 +291,23 @@ function editEntry(id){
   address.value = c.address;
   notes.value = c.notes;
   saveBtn.textContent = "Update Client";
-}
+};
 
-function deleteEntry(id){
-  if(confirm("Delete this client?")){
-    deleteClient(id);
-    refreshList();
+window.deleteEntry = async function(id) {
+  if (confirm("Delete this client?")) {
+    await deleteClient(id);
+    await refreshList();
   }
-}
+};
 
-function resetForm(){
+window.resetForm = function(){
   form.reset();
   clientId.value = "";
   saveBtn.textContent = "Save Client";
-}
+};
+
 </script>
+
 
 <!-- MENU -->
 <script src="../shared/menu.js"></script>
