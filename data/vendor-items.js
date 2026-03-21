@@ -3,6 +3,7 @@ import {
   doc,
   setDoc,
   getDocs,
+  getDoc,
   deleteDoc,
   query,
   where,
@@ -17,7 +18,7 @@ const COLLECTION = "vendorItems";
 const RECYCLE = "recycleBin";
 
 /* ============================= */
-/* 📥 GET ALL ITEMS BY VENDOR */
+/* 📥 GET ITEMS BY VENDOR */
 /* ============================= */
 export async function getItemsByVendor(vendorId){
   const user = auth.currentUser;
@@ -61,6 +62,32 @@ export async function saveVendorItem(item){
 }
 
 /* ============================= */
+/* 🔎 GET SINGLE ITEM */
+/* ============================= */
+export async function getVendorItem(id){
+  const ref = doc(db, COLLECTION, id);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()) return null;
+
+  return { id: snap.id, ...snap.data() };
+}
+
+/* ============================= */
+/* ✏ UPDATE ITEM */
+/* ============================= */
+export async function updateVendorItem(item){
+  if(!item.id) throw new Error("Item ID missing");
+
+  const ref = doc(db, COLLECTION, item.id);
+
+  await setDoc(ref, {
+    ...item,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+}
+
+/* ============================= */
 /* ♻ MOVE TO RECYCLE BIN */
 /* ============================= */
 async function moveToRecycleBin(type, data){
@@ -80,24 +107,16 @@ async function moveToRecycleBin(type, data){
 /* 🗑 DELETE ITEM */
 /* ============================= */
 export async function deleteVendorItem(id){
-  const user = auth.currentUser;
-  if(!user) return;
+  const ref = doc(db, COLLECTION, id);
+  const snap = await getDoc(ref);
 
-  const q = query(
-    collection(db, COLLECTION),
-    where("id", "==", id),
-    where("userId", "==", user.uid)
-  );
+  if(!snap.exists()) return;
 
-  const snapshot = await getDocs(q);
-  if(snapshot.empty) return;
+  const itemData = { id: snap.id, ...snap.data() };
 
-  const docSnap = snapshot.docs[0];
-  const itemData = { id: docSnap.id, ...docSnap.data() };
-
-  // move to recycle
+  // move to recycle bin
   await moveToRecycleBin("vendorItem", itemData);
 
-  // delete
-  await deleteDoc(doc(db, COLLECTION, docSnap.id));
+  // delete from main collection
+  await deleteDoc(ref);
 }
