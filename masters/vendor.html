@@ -201,6 +201,7 @@ import {
   getVendors,
   saveVendor,
   getVendor,
+  updateVendor,
   deleteVendor
 } from "../data/vendor.js";
 
@@ -214,10 +215,14 @@ const vendorSelect = document.getElementById("vendorSelect");
 const vendorTable  = document.getElementById("vendorTable");
 const itemTable    = document.getElementById("itemTable");
 
+/* ===================== */
 /* LOAD VENDORS */
+/* ===================== */
 async function loadVendors(){
   vendorSelect.innerHTML = "<option value=''>-- Select Vendor --</option>";
+
   const vendors = await getVendors();
+
   vendors.forEach(v=>{
     const o = document.createElement("option");
     o.value = v.id;
@@ -226,10 +231,14 @@ async function loadVendors(){
   });
 }
 
+/* ===================== */
 /* TABLE */
+/* ===================== */
 async function renderVendorTable(){
   vendorTable.innerHTML = "";
+
   const vendors = await getVendors();
+
   vendors.forEach(v=>{
     vendorTable.innerHTML += `
       <tr>
@@ -245,22 +254,29 @@ async function renderVendorTable(){
   });
 }
 
+/* ===================== */
+/* EDIT */
+/* ===================== */
 window.editVendor = async function(id){
   const v = await getVendor(id);
   if(!v) return;
 
   vendorSelect.value = v.id;
-  vName.value = v.name||"";
-  vPhone.value = v.phone||"";
-  vEmail.value = v.email||"";
-  vGst.value = v.gst||"";
-  vState.value = v.state||"";
-  vPin.value = v.pin||"";
-  vAddress.value = v.address||"";
-  vRemarks.value = v.remarks||"";
+  vName.value = v.name || "";
+  vPhone.value = v.phone || "";
+  vEmail.value = v.email || "";
+  vGst.value = v.gst || "";
+  vState.value = v.state || "";
+  vPin.value = v.pin || "";
+  vAddress.value = v.address || "";
+  vRemarks.value = v.remarks || "";
+
   loadItems();
 };
 
+/* ===================== */
+/* DELETE */
+/* ===================== */
 window.deleteVendorUI = async function(id){
   if(confirm("Delete this vendor?")){
     await deleteVendor(id);
@@ -270,24 +286,58 @@ window.deleteVendorUI = async function(id){
   }
 };
 
+/* ===================== */
+/* ADD / UPDATE */
+/* ===================== */
 window.addVendor = async function(){
   if(!vName.value) return alert("Enter vendor name");
 
-  await saveVendor({
-    name:vName.value,
-    phone:vPhone.value,
-    email:vEmail.value,
-    gst:vGst.value,
-    state:vState.value,
-    pin:vPin.value,
-    address:vAddress.value,
-    remarks:vRemarks.value
-  });
+  const data = {
+    name: vName.value,
+    phone: vPhone.value,
+    email: vEmail.value,
+    gst: vGst.value,
+    state: vState.value,
+    pin: vPin.value,
+    address: vAddress.value,
+    remarks: vRemarks.value
+  };
 
-  await loadVendors();
-  await renderVendorTable();
+  try{
+    if(vendorSelect.value){
+      // UPDATE
+      await updateVendor({
+        id: vendorSelect.value,
+        ...data
+      });
+    } else {
+      // SAVE NEW
+      await saveVendor(data);
+    }
+
+    // RESET FORM
+    vendorSelect.value = "";
+    vName.value = "";
+    vPhone.value = "";
+    vEmail.value = "";
+    vGst.value = "";
+    vState.value = "";
+    vPin.value = "";
+    vAddress.value = "";
+    vRemarks.value = "";
+
+    await loadVendors();
+    await renderVendorTable();
+
+  }catch(err){
+    console.error(err);
+    alert("Error saving vendor");
+  }
 };
 
+/* ===================== */
+/* ITEMS */
+/* ===================== */
 async function loadItems(){
   itemTable.innerHTML="";
   if(!vendorSelect.value) return;
@@ -313,9 +363,9 @@ window.addItem = async function(){
   await saveVendorItem({
     vendorId: vendorSelect.value,
     name: itemName.value,
-    rate:Number(itemRate.value||0),
-    gst:Number(itemGst.value||0),
-    uom:itemUom.value
+    rate: Number(itemRate.value || 0),
+    gst: Number(itemGst.value || 0),
+    uom: itemUom.value
   });
 
   itemName.value="";
@@ -331,12 +381,14 @@ window.delItem = async function(id){
   }
 };
 
+/* ===================== */
+/* INIT */
+/* ===================== */
 await loadVendors();
 await renderVendorTable();
 vendorSelect.onchange = loadItems;
 
 </script>
-
 
 <!-- MENU -->
 <script src="../shared/menu.js"></script>
