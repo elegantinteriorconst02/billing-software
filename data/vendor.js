@@ -21,11 +21,22 @@ const VENDOR_COLLECTION = "vendors";
 const RECYCLE_COLLECTION = "recycleBin";
 
 /* ============================= */
-/* ✅ GET ALL VENDORS (Once) */
+/* 🔐 SAFE USER CHECK */
+/* ============================= */
+function getUser(){
+  const user = auth.currentUser;
+  if(!user){
+    alert("❌ User not logged in / not ready");
+    throw new Error("User not ready");
+  }
+  return user;
+}
+
+/* ============================= */
+/* ✅ GET ALL VENDORS */
 /* ============================= */
 export async function getVendors() {
-  const user = auth.currentUser;
-  if (!user) return [];
+  const user = getUser();
 
   const q = query(
     collection(db, VENDOR_COLLECTION),
@@ -45,39 +56,12 @@ export async function getVendors() {
 }
 
 /* ============================= */
-/* ✅ REALTIME LISTENER */
-/* ============================= */
-export function listenVendors(callback) {
-const user = auth.currentUser;
-if(!user){
-  alert("User not ready yet. Please wait or reload.");
-  return;
-}
-  
-  if (!user) return;
-
-  const q = query(
-    collection(db, VENDOR_COLLECTION),
-    where("userId", "==", user.uid),
-    where("isDeleted", "==", false),
-    orderBy("createdAt", "desc")
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    const list = [];
-    snapshot.forEach((docSnap) => {
-      list.push({ id: docSnap.id, ...docSnap.data() });
-    });
-    callback(list);
-  });
-}
-
-/* ============================= */
 /* ✅ SAVE VENDOR */
 /* ============================= */
 export async function saveVendor(v) {
-  const user = auth.currentUser;
-  if (!user) throw new Error("User not logged in");
+  const user = getUser();
+
+  console.log("Saving vendor...", v);
 
   const vendorId = "VD-" + Date.now();
 
@@ -92,11 +76,13 @@ export async function saveVendor(v) {
 
   await setDoc(doc(db, VENDOR_COLLECTION, vendorId), vendorData);
 
+  console.log("Vendor saved:", vendorId);
+
   return vendorId;
 }
 
 /* ============================= */
-/* ✅ GET SINGLE VENDOR */
+/* ✅ GET SINGLE */
 /* ============================= */
 export async function getVendor(id) {
   const vendorRef = doc(db, VENDOR_COLLECTION, id);
@@ -108,9 +94,11 @@ export async function getVendor(id) {
 }
 
 /* ============================= */
-/* ✅ UPDATE VENDOR */
+/* ✅ UPDATE */
 /* ============================= */
 export async function updateVendor(v) {
+  const user = getUser();
+
   if (!v.id) throw new Error("Vendor ID missing");
 
   const vendorRef = doc(db, VENDOR_COLLECTION, v.id);
@@ -119,14 +107,15 @@ export async function updateVendor(v) {
     ...v,
     updatedAt: serverTimestamp()
   });
+
+  console.log("Vendor updated");
 }
 
 /* ============================= */
-/* ♻ MOVE TO RECYCLE BIN */
+/* ♻ RECYCLE BIN */
 /* ============================= */
 async function moveToRecycleBin(type, data) {
-  const user = auth.currentUser;
-  if (!user) return;
+  const user = getUser();
 
   await addDoc(collection(db, RECYCLE_COLLECTION), {
     type,
@@ -138,7 +127,7 @@ async function moveToRecycleBin(type, data) {
 }
 
 /* ============================= */
-/* 🗑 DELETE VENDOR */
+/* 🗑 DELETE */
 /* ============================= */
 export async function deleteVendor(id) {
   const vendorRef = doc(db, VENDOR_COLLECTION, id);
@@ -148,9 +137,8 @@ export async function deleteVendor(id) {
 
   const vendorData = { id: snap.id, ...snap.data() };
 
-  // move to recycle bin
   await moveToRecycleBin("vendor", vendorData);
-
-  // hard delete
   await deleteDoc(vendorRef);
+
+  console.log("Vendor deleted");
 }
