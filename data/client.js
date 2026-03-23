@@ -2,128 +2,132 @@ import { db, auth } from "./firebase.js";
 
 import {
   collection,
-  addDoc,
+  doc,
+  setDoc,
   getDocs,
   getDoc,
   updateDoc,
   deleteDoc,
-  doc,
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+const COLLECTION = "clients";
 
-/* =========================
-   GET ALL CLIENTS (LATEST FIRST)
-========================= */
+/* ============================= */
+/* 🔐 SAFE USER CHECK */
+/* ============================= */
+function getUser(){
+  const user = auth.currentUser;
+  if(!user){
+    alert("❌ User not logged in / not ready");
+    throw new Error("User not ready");
+  }
+  return user;
+}
+
+/* ============================= */
+/* ✅ GET ALL CLIENTS */
+/* ============================= */
 export async function getClients() {
 
-  const user = auth.currentUser;
-  if (!user) return [];
+  const user = getUser();
 
-  try {
+  const q = query(
+    collection(db, COLLECTION),
+    where("userId", "==", user.uid),
+    orderBy("createdAt", "desc")
+  );
 
-    const q = query(
-      collection(db, "clients"),
-      where("uid", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
+  const snap = await getDocs(q);
 
-    const snap = await getDocs(q);
+  const list = [];
 
-    return snap.docs.map(d => ({
-      id: d.id,
-      ...d.data()
-    }));
+  snap.forEach(docSnap=>{
+    list.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
+  });
 
-  } catch (error) {
-    console.error("Get Clients Error:", error);
-    return [];
-  }
+  return list;
 }
 
-
-/* =========================
-   GET SINGLE CLIENT (DIRECT FETCH)
-========================= */
+/* ============================= */
+/* ✅ GET SINGLE CLIENT */
+/* ============================= */
 export async function getClientById(id) {
 
-  try {
-    const snap = await getDoc(doc(db, "clients", id));
+  const ref = doc(db, COLLECTION, id);
+  const snap = await getDoc(ref);
 
-    if (!snap.exists()) return null;
+  if(!snap.exists()) return null;
 
-    return {
-      id: snap.id,
-      ...snap.data()
-    };
-
-  } catch (error) {
-    console.error("Get Client Error:", error);
-    return null;
-  }
+  return {
+    id: snap.id,
+    ...snap.data()
+  };
 }
 
-
-/* =========================
-   SAVE CLIENT
-========================= */
+/* ============================= */
+/* ✅ SAVE CLIENT */
+/* ============================= */
 export async function saveClient(client) {
 
-  const user = auth.currentUser;
-  if (!user) return;
+  const user = getUser();
 
-  try {
+  console.log("Saving client...", client);
 
-    await addDoc(collection(db, "clients"), {
-      ...client,
-      uid: user.uid,
-      createdAt: serverTimestamp()
-    });
+  const clientId = "CL-" + Date.now();
 
-  } catch (error) {
-    console.error("Save Client Error:", error);
-  }
+  const data = {
+    ...client,
+    id: clientId,
+    userId: user.uid,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  await setDoc(doc(db, COLLECTION, clientId), data);
+
+  console.log("Client saved:", clientId);
+
+  return clientId;
 }
 
-
-/* =========================
-   UPDATE CLIENT
-========================= */
+/* ============================= */
+/* ✅ UPDATE CLIENT */
+/* ============================= */
 export async function updateClient(client) {
 
-  try {
+  const user = getUser();
 
-    const clientRef = doc(db, "clients", client.id);
+  if(!client.id) throw new Error("Client ID missing");
 
-    await updateDoc(clientRef, {
-      name: client.name,
-      mobile: client.mobile,
-      email: client.email,
-      gst: client.gst,
-      state: client.state,
-      pin: client.pin,
-      address: client.address,
-      notes: client.notes,
-      updatedAt: serverTimestamp()
-    });
+  const ref = doc(db, COLLECTION, client.id);
 
-  } catch (error) {
-    console.error("Update Client Error:", error);
-  }
+  await updateDoc(ref, {
+    ...client,
+    updatedAt: serverTimestamp()
+  });
+
+  console.log("Client updated");
 }
 
-
-/* =========================
-   DELETE CLIENT (SAFE DELETE)
-========================= */
+/* ============================= */
+/* 🗑 DELETE CLIENT */
+/* ============================= */
 export async function deleteClient(id) {
 
-  try {
-    await deleteDoc(doc(db, "clients", id));
-  } catch (error) {
-    console.error("Delete Client Error:", error);
-  }
+  const ref = doc(db, COLLECTION, id);
+  const snap = await getDoc(ref);
+
+  if(!snap.exists()) return;
+
+  await deleteDoc(ref);
+
+  console.log("Client deleted");
 }
