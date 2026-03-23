@@ -330,9 +330,8 @@ window.addVendor = async function(){
     await renderVendorTable();
 
   }catch(err){
-    console.error(err);
-    alert("Error saving vendor");
-  }
+  console.error("🔥 FULL ERROR:", err);
+  alert(err.message);
 };
 
 /* ===================== */
