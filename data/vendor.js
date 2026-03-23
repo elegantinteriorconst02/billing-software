@@ -48,7 +48,12 @@ export async function getVendors() {
 /* ✅ REALTIME LISTENER */
 /* ============================= */
 export function listenVendors(callback) {
-  const user = auth.currentUser;
+const user = auth.currentUser;
+if(!user){
+  alert("User not ready yet. Please wait or reload.");
+  return;
+}
+  
   if (!user) return;
 
   const q = query(
