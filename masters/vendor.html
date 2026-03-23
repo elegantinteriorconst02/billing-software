@@ -7,89 +7,200 @@
 <link rel="stylesheet" href="../assets/menu.css">
 
 <style>
-body{margin:0;font-family:Arial;background:#f4f6fb;}
-.main{padding:20px;max-width:1200px;}
-.grid{display:grid;grid-template-columns:280px 1fr;gap:20px;}
-.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.08);}
-input,select,textarea,button{
-  width:100%;padding:8px;margin-bottom:8px;
-  border-radius:8px;border:1px solid #ccc;font-size:14px;
+body{
+  margin:0;
+  font-family:Arial;
+  background:#f4f6fb;
 }
-button{background:#2d6cdf;color:#fff;border:none;cursor:pointer;}
-table{width:100%;border-collapse:collapse;}
-th,td{border-bottom:1px solid #eee;padding:8px;}
-.badge{background:#e8f0ff;color:#1f4fd8;padding:4px 8px;border-radius:12px;}
+
+/* main content */
+.main{
+  padding:20px;
+  max-width:1200px;
+}
+
+h2{
+  margin-top:0;
+  margin-bottom:16px;
+}
+
+/* layout */
+.grid{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:20px;
+}
+
+/* cards */
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+}
+
+.card h3{
+  margin:0 0 10px;
+  font-size:15px;
+  color:#444;
+}
+
+input,select,textarea,button{
+  width:100%;
+  padding:8px;
+  margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+textarea{resize:vertical}
+
+button{
+  background:#2d6cdf;
+  color:#fff;
+  border:none;
+  cursor:pointer;
+}
+button:hover{background:#1f4fd8}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+}
+
+th,td{
+  border-bottom:1px solid #eee;
+  padding:8px;
+  text-align:left;
+}
+
+th{background:#f1f3f9}
+
+.badge{
+  background:#e8f0ff;
+  color:#1f4fd8;
+  padding:4px 8px;
+  border-radius:12px;
+  font-size:12px;
+}
+
 .flex{display:flex;gap:10px;flex-wrap:wrap}
 .right{text-align:right}
+.small{font-size:12px;color:#666}
+
+@media(max-width:900px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 </head>
 
 <body>
 
+<!-- MENU -->
 <div id="menuContainer"></div>
 
+<!-- PAGE CONTENT -->
 <div class="main">
+
 <h2>🏭 Vendor & Item Master</h2>
 
 <div class="grid">
 
-<div class="card">
-<h3>Vendor List</h3>
-<table>
-<thead>
-<tr><th>Name</th><th>Phone</th><th>GST</th><th>Action</th></tr>
-</thead>
-<tbody id="vendorTable"></tbody>
-</table>
+  <!-- LEFT : VENDOR LIST -->
+  <div class="card">
+    <h3>📋 Vendor List</h3>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>GST</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="vendorTable"></tbody>
+    </table>
+  </div>
+
+  <!-- CENTER : VENDOR FORM -->
+  <div class="card">
+    <h3>Vendor</h3>
+
+    <select id="vendorSelect"></select>
+
+    <input id="vName" placeholder="Vendor Name *">
+    <input id="vPhone" placeholder="Phone">
+    <input id="vEmail" placeholder="Email">
+    <input id="vGst" placeholder="GSTIN">
+    <input id="vState" placeholder="State">
+    <input id="vPin" placeholder="PIN Code">
+
+    <textarea id="vAddress" placeholder="Address"></textarea>
+    <textarea id="vRemarks" placeholder="Remarks"></textarea>
+
+    <button onclick="addVendor()">➕ Add / Update Vendor</button>
+
+    <div class="small">
+      Select vendor to edit details or manage items
+    </div>
+
+    <div class="small" style="margin-top:8px">
+      <b>Vendor GST:</b> <span id="vGstView"></span><br>
+      <b>Phone:</b> <span id="vPhoneView"></span>
+    </div>
+  </div>
+
+  <!-- RIGHT : ITEMS -->
+  <div class="card">
+    <h3>Vendor Items</h3>
+
+    <div class="flex">
+      <input id="itemName" placeholder="Item name">
+      <input id="itemRate" type="number" placeholder="Rate">
+      <input id="itemGst" type="number" placeholder="GST %">
+      <select id="itemUom">
+        <option>PCS</option>
+        <option>NOS</option>
+        <option>SET</option>
+        <option>KG</option>
+        <option>LITRE</option>
+      </select>
+    </div>
+
+    <button onclick="addItem()">➕ Add Item</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>UOM</th>
+          <th>GST%</th>
+          <th class="right">Rate ₹</th>
+          <th>X</th>
+        </tr>
+      </thead>
+      <tbody id="itemTable"></tbody>
+    </table>
+  </div>
+
+</div>
 </div>
 
-<div class="card">
-<h3>Vendor</h3>
 
-<select id="vendorSelect"></select>
 
-<input id="vName" placeholder="Vendor Name *">
-<input id="vPhone" placeholder="Phone">
-<input id="vEmail" placeholder="Email">
-<input id="vGst" placeholder="GSTIN">
-<input id="vState" placeholder="State">
-<input id="vPin" placeholder="PIN Code">
-<textarea id="vAddress" placeholder="Address"></textarea>
-<textarea id="vRemarks" placeholder="Remarks"></textarea>
-
-<button id="saveBtn">➕ Add / Update Vendor</button>
-
-</div>
-
-<div class="card">
-<h3>Vendor Items</h3>
-
-<div class="flex">
-<input id="itemName" placeholder="Item name">
-<input id="itemRate" type="number" placeholder="Rate">
-<input id="itemGst" type="number" placeholder="GST %">
-<select id="itemUom">
-<option>PCS</option><option>NOS</option>
-<option>SET</option><option>KG</option>
-</select>
-</div>
-
-<button id="addItemBtn">➕ Add Item</button>
-
-<table>
-<thead>
-<tr><th>Item</th><th>UOM</th><th>GST%</th><th>Rate</th><th>X</th></tr>
-</thead>
-<tbody id="itemTable"></tbody>
-</table>
-
-</div>
-
-</div>
-</div>
-
-<!-- 🔥 MAIN SCRIPT -->
+<!-- DATA -->
+   
 <script type="module">
+
+  <script type="module">
+
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth } from "../data/firebase.js";
 
 import {
   getVendors,
@@ -105,16 +216,27 @@ import {
   deleteVendorItem
 } from "../data/vendor-items.js";
 
-/* ELEMENTS */
+let authReady = false;
+
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    authReady = true;
+    console.log("User ready:", user.uid);
+  }else{
+    alert("Please login first");
+  }
+});
+
 const vendorSelect = document.getElementById("vendorSelect");
 const vendorTable  = document.getElementById("vendorTable");
 const itemTable    = document.getElementById("itemTable");
-const saveBtn      = document.getElementById("saveBtn");
-const addItemBtn   = document.getElementById("addItemBtn");
 
 /* LOAD VENDORS */
 async function loadVendors(){
-  vendorSelect.innerHTML = "<option value=''>Select Vendor</option>";
+  if(!auth.currentUser) return;
+
+  vendorSelect.innerHTML = "<option value=''>-- Select Vendor --</option>";
+
   const vendors = await getVendors();
 
   vendors.forEach(v=>{
@@ -127,83 +249,106 @@ async function loadVendors(){
 
 /* TABLE */
 async function renderVendorTable(){
-  vendorTable.innerHTML="";
+  if(!auth.currentUser) return;
+
+  vendorTable.innerHTML = "";
+
   const vendors = await getVendors();
 
   vendors.forEach(v=>{
     vendorTable.innerHTML += `
       <tr>
-        <td>${v.name}</td>
+        <td><b>${v.name}</b></td>
         <td>${v.phone||""}</td>
-        <td>${v.gst||""}</td>
+        <td>${v.gst||"-"}</td>
         <td>
-          <button data-id="${v.id}" class="editBtn">✏</button>
-          <button data-id="${v.id}" class="delBtn">🗑</button>
+          <button onclick="window.editVendor('${v.id}')">✏</button>
+          <button style="background:#dc3545" onclick="window.deleteVendorUI('${v.id}')">🗑</button>
         </td>
       </tr>
     `;
   });
-
-  /* EDIT */
-  document.querySelectorAll(".editBtn").forEach(btn=>{
-    btn.onclick = async ()=>{
-      const v = await getVendor(btn.dataset.id);
-      vendorSelect.value = v.id;
-      vName.value = v.name||"";
-      vPhone.value = v.phone||"";
-      vEmail.value = v.email||"";
-      vGst.value = v.gst||"";
-      vState.value = v.state||"";
-      vPin.value = v.pin||"";
-      vAddress.value = v.address||"";
-      vRemarks.value = v.remarks||"";
-      loadItems();
-    };
-  });
-
-  /* DELETE */
-  document.querySelectorAll(".delBtn").forEach(btn=>{
-    btn.onclick = async ()=>{
-      if(confirm("Delete?")){
-        await deleteVendor(btn.dataset.id);
-        loadVendors();
-        renderVendorTable();
-      }
-    };
-  });
 }
 
-/* SAVE / UPDATE */
-saveBtn.addEventListener("click", async ()=>{
+/* EDIT */
+window.editVendor = async function(id){
+  const v = await getVendor(id);
+  if(!v) return;
 
-  if(!vName.value) return alert("Enter name");
+  vendorSelect.value = v.id;
+  vName.value = v.name || "";
+  vPhone.value = v.phone || "";
+  vEmail.value = v.email || "";
+  vGst.value = v.gst || "";
+  vState.value = v.state || "";
+  vPin.value = v.pin || "";
+  vAddress.value = v.address || "";
+  vRemarks.value = v.remarks || "";
 
-  const data = {
-    name:vName.value,
-    phone:vPhone.value,
-    email:vEmail.value,
-    gst:vGst.value,
-    state:vState.value,
-    pin:vPin.value,
-    address:vAddress.value,
-    remarks:vRemarks.value
-  };
+  loadItems();
+};
 
-  if(vendorSelect.value){
-    await updateVendor({ id:vendorSelect.value, ...data });
-  }else{
-    await saveVendor(data);
+/* DELETE */
+window.deleteVendorUI = async function(id){
+  if(confirm("Delete this vendor?")){
+    await deleteVendor(id);
+    await loadVendors();
+    await renderVendorTable();
+    itemTable.innerHTML="";
+  }
+};
+
+/* ADD / UPDATE */
+window.addVendor = async function(){
+  console.log("CLICKED ✅");
+
+  if(!auth.currentUser){
+    alert("Login not ready yet");
+    return;
   }
 
-  /* reset */
-  vendorSelect.value="";
-  vName.value="";vPhone.value="";vEmail.value="";
-  vGst.value="";vState.value="";vPin.value="";
-  vAddress.value="";vRemarks.value="";
+  if(!vName.value) return alert("Enter vendor name");
 
-  loadVendors();
-  renderVendorTable();
-});
+  const data = {
+    name: vName.value,
+    phone: vPhone.value,
+    email: vEmail.value,
+    gst: vGst.value,
+    state: vState.value,
+    pin: vPin.value,
+    address: vAddress.value,
+    remarks: vRemarks.value
+  };
+
+  try{
+    if(vendorSelect.value){
+      await updateVendor({
+        id: vendorSelect.value,
+        ...data
+      });
+    } else {
+      await saveVendor(data);
+    }
+
+    // reset
+    vendorSelect.value = "";
+    vName.value = "";
+    vPhone.value = "";
+    vEmail.value = "";
+    vGst.value = "";
+    vState.value = "";
+    vPin.value = "";
+    vAddress.value = "";
+    vRemarks.value = "";
+
+    await loadVendors();
+    await renderVendorTable();
+
+  }catch(err){
+    console.error("🔥 ERROR:", err);
+    alert(err.message);
+  }
+};
 
 /* ITEMS */
 async function loadItems(){
@@ -216,42 +361,68 @@ async function loadItems(){
     itemTable.innerHTML += `
       <tr>
         <td>${i.name}</td>
-        <td>${i.uom}</td>
-        <td>${i.gst}</td>
-        <td>${i.rate}</td>
-        <td><button data-id="${i.id}" class="delItem">X</button></td>
+        <td><span class="badge">${i.uom}</span></td>
+        <td>${i.gst}%</td>
+        <td class="right">₹ ${i.rate}</td>
+        <td><button onclick="window.delItem('${i.id}')">✕</button></td>
       </tr>
     `;
   });
-
-  document.querySelectorAll(".delItem").forEach(btn=>{
-    btn.onclick = async ()=>{
-      await deleteVendorItem(btn.dataset.id);
-      loadItems();
-    };
-  });
 }
 
-addItemBtn.addEventListener("click", async ()=>{
-  if(!vendorSelect.value) return alert("Select vendor");
+window.addItem = async function(){
+  if(!vendorSelect.value) return alert("Select vendor first");
 
   await saveVendorItem({
-    vendorId:vendorSelect.value,
-    name:itemName.value,
-    rate:Number(itemRate.value||0),
-    gst:Number(itemGst.value||0),
-    uom:itemUom.value
+    vendorId: vendorSelect.value,
+    name: itemName.value,
+    rate: Number(itemRate.value || 0),
+    gst: Number(itemGst.value || 0),
+    uom: itemUom.value
   });
 
-  itemName.value="";itemRate.value="";itemGst.value="";
+  itemName.value="";
+  itemRate.value="";
+  itemGst.value="";
   loadItems();
+};
+
+window.delItem = async function(id){
+  if(confirm("Delete item?")){
+    await deleteVendorItem(id);
+    loadItems();
+  }
+};
+
+/* INIT (wait for auth) */
+const waitAuth = () => new Promise(resolve=>{
+  const t = setInterval(()=>{
+    if(auth.currentUser){
+      clearInterval(t);
+      resolve();
+    }
+  },100);
 });
 
-/* INIT */
+await waitAuth();
+
 await loadVendors();
 await renderVendorTable();
+
 vendorSelect.onchange = loadItems;
 
+
+</script>
+
+<!-- MENU -->
+<script src="../shared/menu.js"></script>
+<script>
+fetch("../shared/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menuContainer").innerHTML = html;
+    initMenu();
+  });
 </script>
 
 </body>
