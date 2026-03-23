@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vendor Master</title>
+
+<link rel="stylesheet" href="../assets/menu.css">
+
+<style>
+body{margin:0;font-family:Arial;background:#f4f6fb;}
+.main{padding:20px;max-width:1200px;}
+.grid{display:grid;grid-template-columns:280px 1fr;gap:20px;}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.08);}
+input,select,textarea,button{
+  width:100%;padding:8px;margin-bottom:8px;
+  border-radius:8px;border:1px solid #ccc;font-size:14px;
+}
+button{background:#2d6cdf;color:#fff;border:none;cursor:pointer;}
+table{width:100%;border-collapse:collapse;}
+th,td{border-bottom:1px solid #eee;padding:8px;}
+.badge{background:#e8f0ff;color:#1f4fd8;padding:4px 8px;border-radius:12px;}
+.flex{display:flex;gap:10px;flex-wrap:wrap}
+.right{text-align:right}
+</style>
+</head>
+
+<body>
+
+<div id="menuContainer"></div>
+
+<div class="main">
+<h2>🏭 Vendor & Item Master</h2>
+
+<div class="grid">
+
+<div class="card">
+<h3>Vendor List</h3>
+<table>
+<thead>
+<tr><th>Name</th><th>Phone</th><th>GST</th><th>Action</th></tr>
+</thead>
+<tbody id="vendorTable"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h3>Vendor</h3>
+
+<select id="vendorSelect"></select>
+
+<input id="vName" placeholder="Vendor Name *">
+<input id="vPhone" placeholder="Phone">
+<input id="vEmail" placeholder="Email">
+<input id="vGst" placeholder="GSTIN">
+<input id="vState" placeholder="State">
+<input id="vPin" placeholder="PIN Code">
+<textarea id="vAddress" placeholder="Address"></textarea>
+<textarea id="vRemarks" placeholder="Remarks"></textarea>
+
+<button id="saveBtn">➕ Add / Update Vendor</button>
+
+</div>
+
+<div class="card">
+<h3>Vendor Items</h3>
+
+<div class="flex">
+<input id="itemName" placeholder="Item name">
+<input id="itemRate" type="number" placeholder="Rate">
+<input id="itemGst" type="number" placeholder="GST %">
+<select id="itemUom">
+<option>PCS</option><option>NOS</option>
+<option>SET</option><option>KG</option>
+</select>
+</div>
+
+<button id="addItemBtn">➕ Add Item</button>
+
+<table>
+<thead>
+<tr><th>Item</th><th>UOM</th><th>GST%</th><th>Rate</th><th>X</th></tr>
+</thead>
+<tbody id="itemTable"></tbody>
+</table>
+
+</div>
+
+</div>
+</div>
+
+<!-- 🔥 MAIN SCRIPT -->
+<script type="module">
+
+import {
+  getVendors,
+  saveVendor,
+  getVendor,
+  updateVendor,
+  deleteVendor
+} from "../data/vendor.js";
+
+import {
+  getItemsByVendor,
+  saveVendorItem,
+  deleteVendorItem
+} from "../data/vendor-items.js";
+
+/* ELEMENTS */
+const vendorSelect = document.getElementById("vendorSelect");
+const vendorTable  = document.getElementById("vendorTable");
+const itemTable    = document.getElementById("itemTable");
+const saveBtn      = document.getElementById("saveBtn");
+const addItemBtn   = document.getElementById("addItemBtn");
+
+/* LOAD VENDORS */
+async function loadVendors(){
+  vendorSelect.innerHTML = "<option value=''>Select Vendor</option>";
+  const vendors = await getVendors();
+
+  vendors.forEach(v=>{
+    const o = document.createElement("option");
+    o.value = v.id;
+    o.textContent = v.name;
+    vendorSelect.appendChild(o);
+  });
+}
+
+/* TABLE */
+async function renderVendorTable(){
+  vendorTable.innerHTML="";
+  const vendors = await getVendors();
+
+  vendors.forEach(v=>{
+    vendorTable.innerHTML += `
+      <tr>
+        <td>${v.name}</td>
+        <td>${v.phone||""}</td>
+        <td>${v.gst||""}</td>
+        <td>
+          <button data-id="${v.id}" class="editBtn">✏</button>
+          <button data-id="${v.id}" class="delBtn">🗑</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  /* EDIT */
+  document.querySelectorAll(".editBtn").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const v = await getVendor(btn.dataset.id);
+      vendorSelect.value = v.id;
+      vName.value = v.name||"";
+      vPhone.value = v.phone||"";
+      vEmail.value = v.email||"";
+      vGst.value = v.gst||"";
+      vState.value = v.state||"";
+      vPin.value = v.pin||"";
+      vAddress.value = v.address||"";
+      vRemarks.value = v.remarks||"";
+      loadItems();
+    };
+  });
+
+  /* DELETE */
+  document.querySelectorAll(".delBtn").forEach(btn=>{
+    btn.onclick = async ()=>{
+      if(confirm("Delete?")){
+        await deleteVendor(btn.dataset.id);
+        loadVendors();
+        renderVendorTable();
+      }
+    };
+  });
+}
+
+/* SAVE / UPDATE */
+saveBtn.addEventListener("click", async ()=>{
+
+  if(!vName.value) return alert("Enter name");
+
+  const data = {
+    name:vName.value,
+    phone:vPhone.value,
+    email:vEmail.value,
+    gst:vGst.value,
+    state:vState.value,
+    pin:vPin.value,
+    address:vAddress.value,
+    remarks:vRemarks.value
+  };
+
+  if(vendorSelect.value){
+    await updateVendor({ id:vendorSelect.value, ...data });
+  }else{
+    await saveVendor(data);
+  }
+
+  /* reset */
+  vendorSelect.value="";
+  vName.value="";vPhone.value="";vEmail.value="";
+  vGst.value="";vState.value="";vPin.value="";
+  vAddress.value="";vRemarks.value="";
+
+  loadVendors();
+  renderVendorTable();
+});
+
+/* ITEMS */
+async function loadItems(){
+  itemTable.innerHTML="";
+  if(!vendorSelect.value) return;
+
+  const items = await getItemsByVendor(vendorSelect.value);
+
+  items.forEach(i=>{
+    itemTable.innerHTML += `
+      <tr>
+        <td>${i.name}</td>
+        <td>${i.uom}</td>
+        <td>${i.gst}</td>
+        <td>${i.rate}</td>
+        <td><button data-id="${i.id}" class="delItem">X</button></td>
+      </tr>
+    `;
+  });
+
+  document.querySelectorAll(".delItem").forEach(btn=>{
+    btn.onclick = async ()=>{
+      await deleteVendorItem(btn.dataset.id);
+      loadItems();
+    };
+  });
+}
+
+addItemBtn.addEventListener("click", async ()=>{
+  if(!vendorSelect.value) return alert("Select vendor");
+
+  await saveVendorItem({
+    vendorId:vendorSelect.value,
+    name:itemName.value,
+    rate:Number(itemRate.value||0),
+    gst:Number(itemGst.value||0),
+    uom:itemUom.value
+  });
+
+  itemName.value="";itemRate.value="";itemGst.value="";
+  loadItems();
+});
+
+/* INIT */
+await loadVendors();
+await renderVendorTable();
+vendorSelect.onchange = loadItems;
+
+</script>
+
+</body>
+</html>
