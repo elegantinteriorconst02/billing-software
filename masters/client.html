@@ -8,7 +8,7 @@
   <!-- MENU CSS -->
   <link rel="stylesheet" href="../assets/menu.css">
 
-  <style>
+  <style> 
     body{
       margin:0;
       font-family:sans-serif;
@@ -204,6 +204,9 @@
 
 <script type="module">
 
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { auth } from "../data/firebase.js";
+
 import {
   getClients,
   getClientById,
@@ -212,6 +215,21 @@ import {
   deleteClient
 } from "../data/client.js";
 
+/* ===================== */
+/* AUTH WAIT FIX */
+/* ===================== */
+const waitAuth = () => new Promise(resolve=>{
+  const t = setInterval(()=>{
+    if(auth.currentUser){
+      clearInterval(t);
+      resolve();
+    }
+  },100);
+});
+
+/* ===================== */
+/* DOM */
+/* ===================== */
 const form = document.getElementById("clientForm");
 const tableBody = document.getElementById("clientTableBody");
 const searchInput = document.getElementById("clientSearch");
@@ -227,13 +245,28 @@ const address = document.getElementById("address");
 const notes = document.getElementById("notes");
 const saveBtn = document.getElementById("saveBtn");
 
-
+/* ===================== */
+/* INIT */
+/* ===================== */
 window.addEventListener("DOMContentLoaded", async () => {
+  await waitAuth(); // 🔥 IMPORTANT
+  console.log("Auth ready:", auth.currentUser);
   await refreshList();
 });
 
+/* ===================== */
+/* SAVE / UPDATE */
+/* ===================== */
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  if(!auth.currentUser){
+    alert("Login not ready");
+    return;
+  }
+
+  saveBtn.textContent = "Saving...";
+  saveBtn.disabled = true;
 
   const client = {
     id: clientId.value,
@@ -247,48 +280,81 @@ form.addEventListener("submit", async (e) => {
     notes: notes.value
   };
 
-  if (client.id) {
-    await updateClient(client);
-  } else {
-    await saveClient(client);
+  console.log("Saving client:", client);
+
+  try{
+    if (client.id) {
+      await updateClient(client);
+    } else {
+      await saveClient(client);
+    }
+
+    alert("Client saved ✅");
+
+    resetForm();
+    await refreshList();
+
+  }catch(err){
+    console.error("SAVE ERROR:", err);
+    alert(err.message);
   }
 
-  resetForm();
-  await refreshList();
+  saveBtn.textContent = "Save Client";
+  saveBtn.disabled = false;
 });
 
+/* ===================== */
+/* LIST LOAD */
+/* ===================== */
 async function refreshList() {
+  tableBody.innerHTML = "Loading...";
+
   const q = (searchInput.value || "").toLowerCase();
-  tableBody.innerHTML = "";
 
-  const clients = await getClients();
+  try{
+    const clients = await getClients();
 
-  clients
-    .filter(c =>
-      c.name?.toLowerCase().includes(q) ||
-      c.mobile?.includes(q) ||
-      c.email?.toLowerCase().includes(q) ||
-      c.gst?.toLowerCase().includes(q) ||
-      c.pin?.includes(q)
-    )
-    .forEach(c => {
-      tableBody.innerHTML += `
-        <tr>
-          <td><b>${c.name}</b></td>
-          <td>${c.mobile || ""}</td>
-          <td>${c.gst || "-"}</td>
-          <td>${c.state || ""}</td>
-          <td class="actions">
-            <button onclick="editEntry('${c.id}')">Edit</button>
-            <button onclick="deleteEntry('${c.id}')">Delete</button>
-          </td>
-        </tr>
-      `;
-    });
+    console.log("Clients:", clients);
+
+    tableBody.innerHTML = "";
+
+    clients
+      .filter(c =>
+        c.name?.toLowerCase().includes(q) ||
+        c.mobile?.includes(q) ||
+        c.email?.toLowerCase().includes(q) ||
+        c.gst?.toLowerCase().includes(q) ||
+        c.pin?.includes(q)
+      )
+      .forEach(c => {
+        tableBody.innerHTML += `
+          <tr>
+            <td><b>${c.name}</b></td>
+            <td>${c.mobile || ""}</td>
+            <td>${c.gst || "-"}</td>
+            <td>${c.state || ""}</td>
+            <td>
+              <button onclick="window.editEntry('${c.id}')">Edit</button>
+              <button onclick="window.deleteEntry('${c.id}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+
+  }catch(err){
+    console.error("LOAD ERROR:", err);
+    tableBody.innerHTML = "Error loading data";
+  }
 }
 
+/* ===================== */
+/* SEARCH */
+/* ===================== */
 searchInput.addEventListener("input", refreshList);
 
+/* ===================== */
+/* EDIT */
+/* ===================== */
 window.editEntry = async function(id) {
   const c = await getClientById(id);
   if (!c) return;
@@ -302,9 +368,13 @@ window.editEntry = async function(id) {
   pin.value = c.pin;
   address.value = c.address;
   notes.value = c.notes;
+
   saveBtn.textContent = "Update Client";
 };
 
+/* ===================== */
+/* DELETE */
+/* ===================== */
 window.deleteEntry = async function(id) {
   if (confirm("Delete this client?")) {
     await deleteClient(id);
@@ -312,24 +382,15 @@ window.deleteEntry = async function(id) {
   }
 };
 
+/* ===================== */
+/* RESET */
+/* ===================== */
 window.resetForm = function(){
   form.reset();
   clientId.value = "";
   saveBtn.textContent = "Save Client";
 };
 
-</script>
-
-
-<!-- MENU -->
-<script src="../shared/menu.js"></script>
-<script>
-fetch("../shared/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menuContainer").innerHTML = html;
-    initMenu();
-  });
 </script>
 
 </body>
