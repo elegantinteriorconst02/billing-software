@@ -53,6 +53,7 @@ th{
 
 .badge.client{background:#e7f7ef;color:#198754}
 .badge.vendor{background:#fff3cd;color:#856404}
+.badge.vendorItem{background:#f0e8ff;color:#6f42c1}
 .badge.bill{background:#e8f0ff;color:#1f4fd8}
 
 .actions button{
@@ -99,9 +100,9 @@ th{
     </div>
   </div>
 
-</div> <!-- end .main -->
+</div>
 
-<!-- DATA -->
+<!-- 🔥 CLOUD SCRIPT ONLY -->
 <script type="module">
 
 import {
@@ -115,39 +116,48 @@ const table = document.getElementById("binTable");
 /* LOAD */
 async function renderRecycleBin(){
 
-  table.innerHTML = "Loading...";
+  table.innerHTML = "<tr><td colspan='4'>Loading...</td></tr>";
 
-  const list = await getRecycleBin();
+  try{
+    const list = await getRecycleBin();
 
-  table.innerHTML = "";
+    table.innerHTML = "";
 
-  if(list.length === 0){
+    if(list.length === 0){
+      table.innerHTML = `
+        <tr>
+          <td colspan="4" class="small">Recycle bin is empty</td>
+        </tr>`;
+      return;
+    }
+
+    list.forEach(item=>{
+      const tr = document.createElement("tr");
+
+      tr.innerHTML = `
+        <td>
+          <span class="badge ${item.type}">
+            ${item.type}
+          </span>
+        </td>
+        <td>${getLabel(item)}</td>
+        <td>${formatDate(item.deletedAt)}</td>
+        <td class="actions">
+          <button class="restore" onclick="window.restore('${item.id}')">Restore</button>
+          <button class="delete" onclick="window.removeItem('${item.id}')">Delete</button>
+        </td>
+      `;
+
+      table.appendChild(tr);
+    });
+
+  }catch(err){
+    console.error(err);
     table.innerHTML = `
       <tr>
-        <td colspan="4" class="small">Recycle bin is empty</td>
+        <td colspan="4">Error loading recycle bin</td>
       </tr>`;
-    return;
   }
-
-  list.forEach(item=>{
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>
-        <span class="badge ${item.type}">
-          ${item.type}
-        </span>
-      </td>
-      <td>${getLabel(item)}</td>
-      <td>${formatDate(item.deletedAt)}</td>
-      <td>
-        <button class="restore" onclick="window.restore('${item.id}')">Restore</button>
-        <button class="delete" onclick="window.removeItem('${item.id}')">Delete</button>
-      </td>
-    `;
-
-    table.appendChild(tr);
-  });
 }
 
 /* LABEL */
@@ -190,68 +200,7 @@ renderRecycleBin();
 
 </script>
 
-<script>
-const table = document.getElementById("binTable");
-
-function renderRecycleBin(){
-  const list = getRecycleBin();
-  table.innerHTML = "";
-
-  if(list.length === 0){
-    table.innerHTML = `
-      <tr>
-        <td colspan="4" class="small">Recycle bin is empty</td>
-      </tr>`;
-    return;
-  }
-
-  list.forEach(item=>{
-    const tr = document.createElement("tr");
-
-    tr.innerHTML = `
-      <td>
-        <span class="badge ${item.type}">
-          ${item.type}
-        </span>
-      </td>
-      <td>${getLabel(item)}</td>
-      <td>${new Date(item.deletedAt).toLocaleDateString()}</td>
-      <td class="actions">
-        <button class="restore" onclick="restore('${item.id}')">Restore</button>
-        <button class="delete" onclick="removeItem('${item.id}')">Delete</button>
-      </td>
-    `;
-
-    table.appendChild(tr);
-  });
-}
-
-function getLabel(item){
-  if(item.type === "client") return item.data.name || "(Client)";
-  if(item.type === "vendor") return item.data.name || "(Vendor)";
-  if(item.type === "bill")
-    return `${item.data.type || "Bill"} : ${item.data.number || ""}`;
-  return "-";
-}
-
-function restore(id){
-  if(confirm("Restore this item?")){
-    restoreFromRecycleBin(id);
-    renderRecycleBin();
-  }
-}
-
-function removeItem(id){
-  if(confirm("Delete permanently?")){
-    deleteFromRecycleBin(id);
-    renderRecycleBin();
-  }
-}
-
-renderRecycleBin();
-</script>
-
-<!-- MENU LOAD -->
+<!-- MENU -->
 <script src="shared/menu.js"></script>
 <script>
 fetch("shared/menu.html")
