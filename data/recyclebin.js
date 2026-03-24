@@ -7,7 +7,8 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { db, auth } from "./firebase.js";
@@ -15,12 +16,22 @@ import { db, auth } from "./firebase.js";
 const COLLECTION = "recycleBin";
 
 /* ============================= */
+/* 🔐 SAFE USER */
+/* ============================= */
+function getUser(){
+  const user = auth.currentUser;
+  if(!user) throw new Error("User not logged in");
+  return user;
+}
+
+/* ============================= */
 /* ♻ MOVE TO BIN */
 /* ============================= */
 export async function moveToRecycleBin(type, data){
 
-  const user = auth.currentUser;
-  if(!user) throw new Error("User not logged in");
+  const user = getUser();
+
+  console.log("♻ Moving to recycle:", type, data);
 
   await addDoc(collection(db, COLLECTION), {
     type,
@@ -64,30 +75,39 @@ export async function getRecycleBin(){
 /* ============================= */
 export async function restoreFromRecycleBin(item){
 
-  const user = auth.currentUser;
-  if(!user) throw new Error("User not logged in");
+  const user = getUser();
 
   const { type, data } = item;
 
-  // 🔥 dynamic restore
   let collectionName = "";
 
   if(type === "client") collectionName = "clients";
-  if(type === "vendor") collectionName = "vendors";
-  if(type === "vendorItem") collectionName = "vendorItems";
-  if(type === "bill") collectionName = "bills";
+  else if(type === "vendor") collectionName = "vendors";
+  else if(type === "vendorItem") collectionName = "vendorItems";
+  else if(type === "bill") collectionName = "bills";
 
-  if(!collectionName) return;
+  if(!collectionName){
+    console.warn("Unknown type:", type);
+    return;
+  }
 
-  // restore document
-  await addDoc(collection(db, collectionName), {
-    ...data,
-    userId: user.uid,
-    restoredAt: serverTimestamp()
-  });
+  console.log("🔁 Restoring:", type, data);
 
-  // delete from recycle
-  await deleteDoc(doc(db, COLLECTION, item.id));
+  try{
+    // 🔥 restore SAME ID (important)
+    await setDoc(doc(db, collectionName, data.id), {
+      ...data,
+      userId: user.uid,
+      restoredAt: serverTimestamp()
+    });
+
+    // remove from recycle bin
+    await deleteDoc(doc(db, COLLECTION, item.id));
+
+  }catch(err){
+    console.error("Restore error:", err);
+    throw err;
+  }
 }
 
 /* ============================= */
@@ -95,5 +115,10 @@ export async function restoreFromRecycleBin(item){
 /* ============================= */
 export async function deleteFromRecycleBin(id){
 
-  await deleteDoc(doc(db, COLLECTION, id));
+  try{
+    await deleteDoc(doc(db, COLLECTION, id));
+    console.log("Deleted permanently:", id);
+  }catch(err){
+    console.error("Delete error:", err);
+  }
 }
