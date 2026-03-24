@@ -102,8 +102,93 @@ th{
 </div> <!-- end .main -->
 
 <!-- DATA -->
-<script src="data/storage.js"></script>
-<script src="data/recyclebin.js"></script>
+<script type="module">
+
+import {
+  getRecycleBin,
+  restoreFromRecycleBin,
+  deleteFromRecycleBin
+} from "../data/recycle.js";
+
+const table = document.getElementById("binTable");
+
+/* LOAD */
+async function renderRecycleBin(){
+
+  table.innerHTML = "Loading...";
+
+  const list = await getRecycleBin();
+
+  table.innerHTML = "";
+
+  if(list.length === 0){
+    table.innerHTML = `
+      <tr>
+        <td colspan="4" class="small">Recycle bin is empty</td>
+      </tr>`;
+    return;
+  }
+
+  list.forEach(item=>{
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>
+        <span class="badge ${item.type}">
+          ${item.type}
+        </span>
+      </td>
+      <td>${getLabel(item)}</td>
+      <td>${formatDate(item.deletedAt)}</td>
+      <td>
+        <button class="restore" onclick="window.restore('${item.id}')">Restore</button>
+        <button class="delete" onclick="window.removeItem('${item.id}')">Delete</button>
+      </td>
+    `;
+
+    table.appendChild(tr);
+  });
+}
+
+/* LABEL */
+function getLabel(item){
+  if(item.type === "client") return item.data.name || "(Client)";
+  if(item.type === "vendor") return item.data.name || "(Vendor)";
+  if(item.type === "vendorItem") return item.data.name || "(Item)";
+  if(item.type === "bill")
+    return `${item.data.type || "Bill"} : ${item.data.number || ""}`;
+  return "-";
+}
+
+/* DATE */
+function formatDate(ts){
+  if(!ts) return "";
+  return new Date(ts.seconds * 1000).toLocaleDateString();
+}
+
+/* RESTORE */
+window.restore = async function(id){
+  if(confirm("Restore this item?")){
+    const list = await getRecycleBin();
+    const item = list.find(x=>x.id===id);
+    if(item){
+      await restoreFromRecycleBin(item);
+      renderRecycleBin();
+    }
+  }
+};
+
+/* DELETE */
+window.removeItem = async function(id){
+  if(confirm("Delete permanently?")){
+    await deleteFromRecycleBin(id);
+    renderRecycleBin();
+  }
+};
+
+renderRecycleBin();
+
+</script>
 
 <script>
 const table = document.getElementById("binTable");
