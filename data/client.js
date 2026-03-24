@@ -11,9 +11,11 @@ import {
   query,
   where,
   orderBy,
-  serverTimestamp,
-  addDoc
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// 🔥 ADD THIS (IMPORTANT)
+import { moveToRecycleBin } from "./recycle.js";
 
 const COLLECTION = "clients";
 
@@ -23,8 +25,7 @@ const COLLECTION = "clients";
 function getUser(){
   const user = auth.currentUser;
   if(!user){
-    alert("❌ User not logged in / not ready");
-    throw new Error("User not ready");
+    throw new Error("User not logged in");
   }
   return user;
 }
@@ -79,8 +80,6 @@ export async function saveClient(client) {
 
   const user = getUser();
 
-  console.log("Saving client...", client);
-
   const clientId = "CL-" + Date.now();
 
   const data = {
@@ -103,7 +102,7 @@ export async function saveClient(client) {
 /* ============================= */
 export async function updateClient(client) {
 
-  const user = getUser();
+  getUser();
 
   if(!client.id) throw new Error("Client ID missing");
 
@@ -118,7 +117,7 @@ export async function updateClient(client) {
 }
 
 /* ============================= */
-/* 🗑 DELETE CLIENT */
+/* 🗑 DELETE → RECYCLE BIN */
 /* ============================= */
 export async function deleteClient(id) {
 
@@ -127,7 +126,15 @@ export async function deleteClient(id) {
 
   if(!snap.exists()) return;
 
+  const clientData = { id: snap.id, ...snap.data() };
+
+  console.log("Deleting client:", clientData);
+
+  // ♻ move to recycle bin
+  await moveToRecycleBin("client", clientData);
+
+  // ❌ delete from main collection
   await deleteDoc(ref);
 
-  console.log("Client deleted");
+  console.log("Client moved to recycle bin");
 }
