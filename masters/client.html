@@ -248,11 +248,9 @@ const saveBtn = document.getElementById("saveBtn");
 /* ===================== */
 /* INIT */
 /* ===================== */
-window.addEventListener("DOMContentLoaded", async () => {
-  await waitAuth(); // 🔥 IMPORTANT
-  console.log("Auth ready:", auth.currentUser);
-  await refreshList();
-});
+await waitAuth();
+console.log("Auth ready:", auth.currentUser);
+await refreshList();
 
 /* ===================== */
 /* SAVE / UPDATE */
