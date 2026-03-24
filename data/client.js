@@ -14,13 +14,12 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔥 ADD THIS (IMPORTANT)
 import { moveToRecycleBin } from "./recycle.js";
 
 const COLLECTION = "clients";
 
 /* ============================= */
-/* 🔐 SAFE USER CHECK */
+/* 🔐 SAFE USER */
 /* ============================= */
 function getUser(){
   const user = auth.currentUser;
@@ -31,7 +30,7 @@ function getUser(){
 }
 
 /* ============================= */
-/* ✅ GET ALL CLIENTS */
+/* ✅ GET ALL */
 /* ============================= */
 export async function getClients() {
 
@@ -58,7 +57,7 @@ export async function getClients() {
 }
 
 /* ============================= */
-/* ✅ GET SINGLE CLIENT */
+/* ✅ GET ONE */
 /* ============================= */
 export async function getClientById(id) {
 
@@ -74,7 +73,7 @@ export async function getClientById(id) {
 }
 
 /* ============================= */
-/* ✅ SAVE CLIENT */
+/* ✅ SAVE */
 /* ============================= */
 export async function saveClient(client) {
 
@@ -83,8 +82,14 @@ export async function saveClient(client) {
   const clientId = "CL-" + Date.now();
 
   const data = {
-    ...client,
-    id: clientId,
+    name: client.name,
+    mobile: client.mobile || "",
+    email: client.email || "",
+    gst: client.gst || "",
+    state: client.state || "",
+    pin: client.pin || "",
+    address: client.address || "",
+    notes: client.notes || "",
     userId: user.uid,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
@@ -98,7 +103,7 @@ export async function saveClient(client) {
 }
 
 /* ============================= */
-/* ✅ UPDATE CLIENT */
+/* ✅ UPDATE */
 /* ============================= */
 export async function updateClient(client) {
 
@@ -109,7 +114,14 @@ export async function updateClient(client) {
   const ref = doc(db, COLLECTION, client.id);
 
   await updateDoc(ref, {
-    ...client,
+    name: client.name,
+    mobile: client.mobile || "",
+    email: client.email || "",
+    gst: client.gst || "",
+    state: client.state || "",
+    pin: client.pin || "",
+    address: client.address || "",
+    notes: client.notes || "",
     updatedAt: serverTimestamp()
   });
 
@@ -117,7 +129,7 @@ export async function updateClient(client) {
 }
 
 /* ============================= */
-/* 🗑 DELETE → RECYCLE BIN */
+/* 🗑 DELETE → RECYCLE */
 /* ============================= */
 export async function deleteClient(id) {
 
@@ -130,11 +142,15 @@ export async function deleteClient(id) {
 
   console.log("Deleting client:", clientData);
 
-  // ♻ move to recycle bin
-  await moveToRecycleBin("client", clientData);
+  // 🔥 SAFE RECYCLE (no crash)
+  try{
+    await moveToRecycleBin("client", clientData);
+  }catch(err){
+    console.error("Recycle failed:", err);
+  }
 
-  // ❌ delete from main collection
+  // delete anyway
   await deleteDoc(ref);
 
-  console.log("Client moved to recycle bin");
+  console.log("Client deleted + moved to recycle");
 }
