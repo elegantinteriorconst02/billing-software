@@ -1,71 +1,99 @@
-const RECYCLE_KEY = "recycle_bin";
-const RECYCLE_DAYS = 30;
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ===== HELPERS ===== */
-function getRecycleBin(){
-  cleanupRecycleBin();
-  return JSON.parse(localStorage.getItem(RECYCLE_KEY) || "[]");
+import { db, auth } from "./firebase.js";
+
+const COLLECTION = "recycleBin";
+
+/* ============================= */
+/* ♻ MOVE TO BIN */
+/* ============================= */
+export async function moveToRecycleBin(type, data){
+
+  const user = auth.currentUser;
+  if(!user) throw new Error("User not logged in");
+
+  await addDoc(collection(db, COLLECTION), {
+    type,
+    originalId: data.id,
+    userId: user.uid,
+    data,
+    deletedAt: serverTimestamp()
+  });
 }
 
-function saveRecycleBin(list){
-  localStorage.setItem(RECYCLE_KEY, JSON.stringify(list));
-}
+/* ============================= */
+/* 📥 GET BIN DATA */
+/* ============================= */
+export async function getRecycleBin(){
 
-/* ===== MOVE TO BIN ===== */
-function moveToRecycleBin(type, data){
-  const list = getRecycleBin();
+  const user = auth.currentUser;
+  if(!user) return [];
 
-  list.push({
-    id: "RB-" + Date.now(),
-    type,                 // client | vendor | bill
-    data,                 // full object
-    deletedAt: Date.now()
+  const q = query(
+    collection(db, COLLECTION),
+    where("userId", "==", user.uid),
+    orderBy("deletedAt", "desc")
+  );
+
+  const snap = await getDocs(q);
+
+  const list = [];
+
+  snap.forEach(docSnap=>{
+    list.push({
+      id: docSnap.id,
+      ...docSnap.data()
+    });
   });
 
-  saveRecycleBin(list);
+  return list;
 }
 
-/* ===== RESTORE ===== */
-function restoreFromRecycleBin(id){
-  const list = getRecycleBin();
-  const item = list.find(x=>x.id===id);
-  if(!item) return;
+/* ============================= */
+/* 🔁 RESTORE */
+/* ============================= */
+export async function restoreFromRecycleBin(item){
 
-  if(item.type === "client"){
-    const clients = JSON.parse(localStorage.getItem("clients")||"[]");
-    clients.push(item.data);
-    localStorage.setItem("clients", JSON.stringify(clients));
-  }
+  const user = auth.currentUser;
+  if(!user) throw new Error("User not logged in");
 
-  if(item.type === "vendor"){
-    const vendors = JSON.parse(localStorage.getItem("vendors")||"[]");
-    vendors.push(item.data);
-    localStorage.setItem("vendors", JSON.stringify(vendors));
-  }
+  const { type, data } = item;
 
-  if(item.type === "bill"){
-    const bills = JSON.parse(localStorage.getItem("bills")||"[]");
-    bills.push(item.data);
-    localStorage.setItem("bills", JSON.stringify(bills));
-  }
+  // 🔥 dynamic restore
+  let collectionName = "";
 
-  deleteFromRecycleBin(id);
-}
+  if(type === "client") collectionName = "clients";
+  if(type === "vendor") collectionName = "vendors";
+  if(type === "vendorItem") collectionName = "vendorItems";
+  if(type === "bill") collectionName = "bills";
 
-/* ===== DELETE PERMANENT ===== */
-function deleteFromRecycleBin(id){
-  let list = getRecycleBin().filter(x=>x.id!==id);
-  saveRecycleBin(list);
-}
+  if(!collectionName) return;
 
-/* ===== AUTO CLEANUP (30 DAYS) ===== */
-function cleanupRecycleBin(){
-  const now = Date.now();
-  let list = JSON.parse(localStorage.getItem(RECYCLE_KEY) || "[]");
-
-  list = list.filter(item=>{
-    return (now - item.deletedAt) <= RECYCLE_DAYS * 24 * 60 * 60 * 1000;
+  // restore document
+  await addDoc(collection(db, collectionName), {
+    ...data,
+    userId: user.uid,
+    restoredAt: serverTimestamp()
   });
 
-  saveRecycleBin(list);
+  // delete from recycle
+  await deleteDoc(doc(db, COLLECTION, item.id));
+}
+
+/* ============================= */
+/* 🗑 DELETE PERMANENT */
+/* ============================= */
+export async function deleteFromRecycleBin(id){
+
+  await deleteDoc(doc(db, COLLECTION, id));
 }
